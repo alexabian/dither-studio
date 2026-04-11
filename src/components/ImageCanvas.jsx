@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState, useCallback } from 'react'
 
 export default function ImageCanvas({
-  pixels, width, height, originalPixels,
-  splitCompare, processing, quickPixels, quickWidth, quickHeight,
+  pixels, width, height, displayWidth, displayHeight, pixelSize,
+  originalPixels, splitCompare, processing, quickPixels, quickWidth, quickHeight,
 }) {
   const canvasRef  = useRef(null)
   const areaRef    = useRef(null)
@@ -142,7 +142,15 @@ export default function ImageCanvas({
             style={{ transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom})`,
                      transformOrigin: 'center center', transition: 'none' }}
           >
-            <canvas ref={canvasRef} className="output-canvas" />
+            <canvas
+              ref={canvasRef}
+              className="output-canvas"
+              style={pixelSize > 1 ? {
+                imageRendering: 'pixelated',
+                width:  displayWidth  || width,
+                height: displayHeight || height,
+              } : undefined}
+            />
           </div>
         </div>
       ) : (

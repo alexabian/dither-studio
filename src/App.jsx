@@ -10,7 +10,7 @@ import { generateDefaultImage } from './utils/generators'
 
 // Keys that affect processing output (used for undo/redo history)
 const SETTINGS_KEYS = [
-  'ditherMethod','ditherAmount','ditherDiffusion','serpentine',
+  'ditherMethod','ditherAmount','ditherDiffusion','serpentine','pixelSize',
   'paletteColors','paletteMethod','customColors',
   'gamma','blacks','whites','contrast','saturation','hue',
   'noiseCoverage','noiseIntensity','noiseSaturation',
@@ -27,9 +27,10 @@ const DEFAULTS = {
   activePanel: 'dither',
   originalPixels: null, originalWidth: null, originalHeight: null, sourceName: null,
   displayWidth: 512, displayHeight: 512, keepRatio: true,
-  processedPixels: null, adjustedPixels: null, computedPalette: [], histogram: null,
+  processedPixels: null, processedWidth: null, processedHeight: null,
+  adjustedPixels: null, computedPalette: [], histogram: null,
   quickPixels: null, quickWidth: null, quickHeight: null,
-  ditherMethod: 'atkinson', ditherAmount: 0.65, ditherDiffusion: 1, serpentine: true,
+  ditherMethod: 'atkinson', ditherAmount: 0.65, ditherDiffusion: 1, serpentine: true, pixelSize: 1,
   paletteColors: 8, paletteMethod: 'median-cut',
   customColors: ['#000000','#333333','#666666','#999999','#cccccc','#ffffff','#c084fc','#6d28d9'],
   gamma: 2.13, blacks: 0.112, whites: 0, contrast: 1, saturation: 1, hue: 0,
@@ -107,6 +108,8 @@ export default function App() {
       if (data.error) { setMany({ processing: false }); return }
       setMany({
         processedPixels: data.processedPixels,
+        processedWidth:  data.width,
+        processedHeight: data.height,
         adjustedPixels:  data.adjustedPixels,
         computedPalette: data.palette,
         histogram: data.histogram,
@@ -355,8 +358,11 @@ export default function App() {
         <ImageCanvas
           pixels={state.processedPixels}
           originalPixels={state.adjustedPixels}
-          width={state.displayWidth}
-          height={state.displayHeight}
+          width={state.processedWidth  || state.displayWidth}
+          height={state.processedHeight || state.displayHeight}
+          displayWidth={state.displayWidth}
+          displayHeight={state.displayHeight}
+          pixelSize={state.pixelSize}
           splitCompare={state.splitCompare}
           processing={state.processing}
           quickPixels={state.quickPixels}

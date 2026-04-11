@@ -32,6 +32,7 @@ export default function DitherPanel({ state, set, setMany }) {
       ditherAmount:    rnd(0.3, 1.0),
       ditherDiffusion: rnd(0.5, 2.0),
       serpentine:      Math.random() > 0.5,
+      pixelSize:       Math.floor(rnd(1, 8, 0)),
     })
   }
 
@@ -42,6 +43,7 @@ export default function DitherPanel({ state, set, setMany }) {
       ditherAmount:    rnd(0.3, 1.0),
       ditherDiffusion: rnd(0.5, 2.0),
       serpentine:      Math.random() > 0.5,
+      pixelSize:       Math.floor(rnd(1, 8, 0)),
     })
   }
 
@@ -53,8 +55,9 @@ export default function DitherPanel({ state, set, setMany }) {
       </div>
 
       <div className="panel-section">
-        <Slider label="Amount"    value={state.ditherAmount}    min={0} max={1} step={0.01} onChange={v => set('ditherAmount', v)} />
-        <Slider label="Diffusion" value={state.ditherDiffusion} min={0} max={2} step={0.01} onChange={v => set('ditherDiffusion', v)} />
+        <Slider label="Amount"    value={state.ditherAmount}    min={0} max={1}  step={0.01} onChange={v => set('ditherAmount', v)} />
+        <Slider label="Diffusion" value={state.ditherDiffusion} min={0} max={2}  step={0.01} onChange={v => set('ditherDiffusion', v)} />
+        <Slider label="Dot Size"  value={state.pixelSize}       min={1} max={16} step={1}    onChange={v => set('pixelSize', v)} />
 
         {ERROR_DIFFUSE_METHODS.has(state.ditherMethod) && (
           <div className="toggle-row" style={{ marginTop: 4 }}>

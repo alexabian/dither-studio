@@ -8,10 +8,15 @@ self.onmessage = ({ data }) => {
   try {
     let src = pixels, w = origWidth, h = origHeight
 
-    // Resize to display dimensions
-    if (displayWidth !== origWidth || displayHeight !== origHeight) {
-      src = resizePixels(src, origWidth, origHeight, displayWidth, displayHeight)
-      w = displayWidth; h = displayHeight
+    // Pixel size: downsample further for large-dot effect
+    const pixelSize = Math.max(1, Math.round(settings.pixelSize || 1))
+    const actualW = Math.max(1, Math.round(displayWidth  / pixelSize))
+    const actualH = Math.max(1, Math.round(displayHeight / pixelSize))
+
+    // Resize to actual working dimensions
+    if (actualW !== origWidth || actualH !== origHeight) {
+      src = resizePixels(src, origWidth, origHeight, actualW, actualH)
+      w = actualW; h = actualH
     }
 
     // Quick mode: crop center 200×200 for live slider preview
