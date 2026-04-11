@@ -180,6 +180,12 @@ export default function App() {
               displayWidth: 512, displayHeight: 512, sourceName: 'default' })
   }, [setMany])
 
+  const handleCrop = useCallback((imageData, w, h, name) => {
+    const pixels = new Uint8ClampedArray(imageData.data)
+    setMany({ originalPixels: pixels, originalWidth: w, originalHeight: h,
+              displayWidth: w, displayHeight: h, sourceName: name })
+  }, [setMany])
+
   // ── Save / Copy ──────────────────────────────────────────────
   const handleSave = useCallback(() => {
     if (!state.processedPixels || !state.displayWidth || !state.displayHeight) return
@@ -369,6 +375,7 @@ export default function App() {
                 state={state} set={set}
                 onFileLoad={handleFileLoad}
                 onResetDefault={handleResetDefault}
+                onCrop={handleCrop}
                 gallery={state.gallery}
                 onGallerySelect={(item) => setMany({ originalPixels: item.pixels, originalWidth: item.width, originalHeight: item.height, displayWidth: item.width, displayHeight: item.height, sourceName: item.name })}
                 onClearGallery={() => set('gallery', [])}

@@ -1,5 +1,6 @@
 import { useRef, useState, useCallback } from 'react'
 import Slider from '../ui/Slider'
+import CropModal from '../CropModal'
 
 const FORMAT_OPTIONS = [
   { value: 'png',  label: 'PNG' },
@@ -7,9 +8,10 @@ const FORMAT_OPTIONS = [
   { value: 'webp', label: 'WebP' },
 ]
 
-export default function FilesPanel({ state, set, onFileLoad, onResetDefault, gallery, onGallerySelect, onClearGallery, onSave, onCopy }) {
+export default function FilesPanel({ state, set, onFileLoad, onResetDefault, onCrop, gallery, onGallerySelect, onClearGallery, onSave, onCopy }) {
   const fileInputRef = useRef(null)
-  const [dragOver, setDragOver] = useState(false)
+  const [dragOver, setDragOver]   = useState(false)
+  const [showCrop, setShowCrop]   = useState(false)
 
   const handleFile = useCallback((file) => {
     if (!file || !file.type.startsWith('image/')) return
@@ -100,6 +102,25 @@ export default function FilesPanel({ state, set, onFileLoad, onResetDefault, gal
         </div>
       </div>
 
+      {state.originalPixels && (
+        <div className="panel-section">
+          <span className="section-label">Crop</span>
+          <button
+            className="action-btn crop-open-btn"
+            onClick={() => setShowCrop(true)}
+            disabled={!state.originalPixels}
+          >
+            <svg viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
+              <path d="M3 1v10h10M1 3h2M1 7h2M1 11h2M5 13v-2M9 13v-2M13 13v-2"/>
+            </svg>
+            Open Crop Tool
+          </button>
+          <p style={{ fontSize:11, color:'var(--text-4)', marginTop:4, lineHeight:1.4 }}>
+            Drag to select · handles to resize · click outside to cancel
+          </p>
+        </div>
+      )}
+
       {state.originalWidth && (
         <div className="panel-section">
           <span className="section-label">Size</span>
@@ -166,6 +187,20 @@ export default function FilesPanel({ state, set, onFileLoad, onResetDefault, gal
           <p style={{ fontSize:11, color:'var(--text-4)' }}>No saved images yet.</p>
         )}
       </div>
+
+      {showCrop && state.originalPixels && (
+        <CropModal
+          pixels={state.originalPixels}
+          width={state.originalWidth}
+          height={state.originalHeight}
+          sourceName={state.sourceName}
+          onConfirm={(imageData, w, h, name) => {
+            onCrop(imageData, w, h, name)
+            setShowCrop(false)
+          }}
+          onClose={() => setShowCrop(false)}
+        />
+      )}
     </>
   )
 }

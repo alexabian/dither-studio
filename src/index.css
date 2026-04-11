@@ -789,6 +789,104 @@ input[type=range]::-moz-range-thumb {
   border-bottom: 1px solid rgba(255,255,255,0.08);
 }
 
+/* ── Crop Tool ─────────────────────────────────────────────── */
+.crop-open-btn {
+  width: 100%;
+  justify-content: center;
+  padding: 8px;
+  border-style: dashed;
+  font-weight: 500;
+  color: var(--text-2);
+}
+.crop-open-btn:hover { border-style: solid; color: var(--accent); border-color: var(--accent-border); background: var(--accent-bg); }
+.crop-open-btn svg { width: 13px; height: 13px; }
+
+.crop-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  background: rgba(0,0,0,0.72);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  backdrop-filter: blur(3px);
+  animation: fadeIn 0.12s ease;
+}
+@keyframes fadeIn { from { opacity:0 } to { opacity:1 } }
+
+.crop-modal {
+  display: flex;
+  flex-direction: column;
+  background: var(--surface);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--r-lg);
+  box-shadow: var(--shadow-lg);
+  overflow: hidden;
+  max-width: calc(100vw - 80px);
+  max-height: calc(100vh - 80px);
+  animation: slideUp 0.15s ease;
+}
+@keyframes slideUp { from { transform: translateY(8px); opacity:0 } to { transform: none; opacity:1 } }
+
+.crop-modal-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface-2);
+  flex-shrink: 0;
+}
+.crop-modal-title {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text);
+}
+.crop-modal-title svg { width:13px; height:13px; color:var(--accent); }
+.crop-modal-info {
+  margin-left: auto;
+  font-size: 11px;
+  font-family: var(--font-mono);
+  color: var(--text-3);
+  background: var(--surface-3);
+  padding: 2px 7px;
+  border-radius: var(--r-full);
+}
+.crop-close-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px; height: 22px;
+  border-radius: var(--r);
+  color: var(--text-3);
+  transition: all 0.1s;
+}
+.crop-close-btn:hover { background: var(--surface-3); color: var(--text); }
+.crop-close-btn svg { width: 10px; height: 10px; }
+
+.crop-canvas-wrap {
+  overflow: auto;
+  flex: 1;
+  padding: 16px;
+  background: var(--canvas-bg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.crop-modal-footer {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  border-top: 1px solid var(--border);
+  background: var(--surface-2);
+  flex-shrink: 0;
+}
+
 /* ── Presets Panel ─────────────────────────────────────────── */
 .preset-name-input {
   flex: 1;
