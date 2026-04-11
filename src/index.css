@@ -525,6 +525,45 @@ input[type=range]::-moz-range-thumb {
 }
 .action-btn.primary:hover { background: var(--accent-2); border-color: var(--accent-2); }
 
+/* ── Randomize buttons ─────────────────────────────────────── */
+.randomize-row {
+  display: flex;
+  gap: 6px;
+}
+.randomize-btn {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  padding: 6px 10px;
+  background: var(--surface-2);
+  border: 1.5px dashed var(--border-strong);
+  border-radius: var(--r);
+  color: var(--text-3);
+  font-size: 11px;
+  font-weight: 500;
+  transition: all 0.14s;
+}
+.randomize-btn:hover {
+  background: var(--accent-bg);
+  border-color: var(--accent-border);
+  color: var(--accent);
+  border-style: solid;
+}
+.randomize-btn:active { transform: scale(0.97); }
+.randomize-btn svg { width: 12px; height: 12px; flex-shrink: 0; }
+.randomize-btn--all {
+  background: var(--surface-3);
+  border-color: var(--border-strong);
+  border-style: solid;
+}
+.randomize-btn--all:hover {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}
+
 .source-tag {
   display: inline-flex;
   align-items: center;
@@ -833,6 +872,24 @@ input[type=range]::-moz-range-thumb {
 .preset-delete-btn svg { width: 10px; height: 10px; }
 
 /* ── Classic palette list ──────────────────────────────────── */
+.palette-group {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  margin-bottom: 10px;
+}
+.palette-group:last-child { margin-bottom: 0; }
+.palette-group-label {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-4);
+  padding: 2px 0 4px;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 2px;
+}
+
 .preset-palette-list {
   display: flex;
   flex-direction: column;

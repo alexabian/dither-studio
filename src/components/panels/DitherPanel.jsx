@@ -19,7 +19,32 @@ const ERROR_DIFFUSE_METHODS = new Set([
   'floyd-steinberg','jarvis','stucki','atkinson','burkes','sierra','two-row-sierra','sierra-lite'
 ])
 
-export default function DitherPanel({ state, set }) {
+const RANDOMIZABLE_METHODS = METHODS.map(m => m.value).filter(m => m !== 'disabled')
+
+function rnd(min, max, decimals = 2) {
+  const v = Math.random() * (max - min) + min
+  return Math.round(v * 10 ** decimals) / 10 ** decimals
+}
+
+export default function DitherPanel({ state, set, setMany }) {
+  const randomizeSettings = () => {
+    setMany({
+      ditherAmount:    rnd(0.3, 1.0),
+      ditherDiffusion: rnd(0.5, 2.0),
+      serpentine:      Math.random() > 0.5,
+    })
+  }
+
+  const randomizeAll = () => {
+    const method = RANDOMIZABLE_METHODS[Math.floor(Math.random() * RANDOMIZABLE_METHODS.length)]
+    setMany({
+      ditherMethod:    method,
+      ditherAmount:    rnd(0.3, 1.0),
+      ditherDiffusion: rnd(0.5, 2.0),
+      serpentine:      Math.random() > 0.5,
+    })
+  }
+
   return (
     <>
       <div className="panel-section">
@@ -40,6 +65,30 @@ export default function DitherPanel({ state, set }) {
             </label>
           </div>
         )}
+      </div>
+
+      <div className="panel-section">
+        <span className="section-label">Randomize</span>
+        <div className="randomize-row">
+          <button className="randomize-btn" onClick={randomizeSettings} title="Randomize Amount, Diffusion & Serpentine — keeps current method">
+            <svg viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M1 4h2.5a4 4 0 0 1 3 1.4L8 7l1.5 1.6a4 4 0 0 0 3 1.4H14"/>
+              <path d="M12 2.5l2 1.5-2 1.5"/>
+              <path d="M1 10h2.5a4 4 0 0 0 3-1.4L8 7"/>
+              <path d="M12 8.5l2 1.5-2 1.5"/>
+            </svg>
+            Settings Only
+          </button>
+          <button className="randomize-btn randomize-btn--all" onClick={randomizeAll} title="Randomize everything including method">
+            <svg viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M1 4h2.5a4 4 0 0 1 3 1.4L8 7l1.5 1.6a4 4 0 0 0 3 1.4H14"/>
+              <path d="M12 2.5l2 1.5-2 1.5"/>
+              <path d="M1 10h2.5a4 4 0 0 0 3-1.4L8 7"/>
+              <path d="M12 8.5l2 1.5-2 1.5"/>
+            </svg>
+            Randomize All
+          </button>
+        </div>
       </div>
     </>
   )

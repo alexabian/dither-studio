@@ -363,7 +363,7 @@ export default function App() {
             <h2 className="panel-title">{panelTitle}</h2>
           </div>
           <div className="panel-body">
-            {state.activePanel === 'dither' && <DitherPanel state={state} set={set} />}
+            {state.activePanel === 'dither' && <DitherPanel state={state} set={set} setMany={setMany} />}
             {state.activePanel === 'files' && (
               <FilesPanel
                 state={state} set={set}
