@@ -65,6 +65,9 @@ const PALETTE_GROUPS = [
   },
 ]
 
+// Flat list of all palettes for random picking
+const ALL_PALETTES = PALETTE_GROUPS.flatMap(g => g.palettes)
+
 export default function PalettePanel({ state, set, computedPalette }) {
   const colorInputRefs = useRef([])
 
@@ -75,6 +78,12 @@ export default function PalettePanel({ state, set, computedPalette }) {
   const applyBuiltin = (preset) => {
     set('paletteMethod', 'custom')
     set('customColors', preset.colors)
+  }
+
+  const randomizePalette = () => {
+    const pick = ALL_PALETTES[Math.floor(Math.random() * ALL_PALETTES.length)]
+    set('paletteMethod', 'custom')
+    set('customColors', pick.colors)
   }
 
   const handleColorChange = (i, hex) => {
@@ -93,6 +102,18 @@ export default function PalettePanel({ state, set, computedPalette }) {
       <div className="panel-section">
         <span className="section-label">Quantization Method</span>
         <ButtonGroup options={METHODS} value={state.paletteMethod} onChange={v => set('paletteMethod', v)} />
+      </div>
+
+      <div className="panel-section">
+        <button className="randomize-btn randomize-btn--all" style={{ width:'100%' }} onClick={randomizePalette}>
+          <svg viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M1 4h2.5a4 4 0 0 1 3 1.4L8 7l1.5 1.6a4 4 0 0 0 3 1.4H14"/>
+            <path d="M12 2.5l2 1.5-2 1.5"/>
+            <path d="M1 10h2.5a4 4 0 0 0 3-1.4L8 7"/>
+            <path d="M12 8.5l2 1.5-2 1.5"/>
+          </svg>
+          Randomize Palette
+        </button>
       </div>
 
       <div className="panel-section">

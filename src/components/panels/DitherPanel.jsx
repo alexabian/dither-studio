@@ -32,7 +32,6 @@ export default function DitherPanel({ state, set, setMany }) {
       ditherAmount:    rnd(0.3, 1.0),
       ditherDiffusion: rnd(0.5, 2.0),
       serpentine:      Math.random() > 0.5,
-      pixelSize:       Math.floor(rnd(1, 8, 0)),
     })
   }
 
@@ -43,7 +42,6 @@ export default function DitherPanel({ state, set, setMany }) {
       ditherAmount:    rnd(0.3, 1.0),
       ditherDiffusion: rnd(0.5, 2.0),
       serpentine:      Math.random() > 0.5,
-      pixelSize:       Math.floor(rnd(1, 8, 0)),
     })
   }
 
