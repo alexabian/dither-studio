@@ -5,16 +5,8 @@ export default function AdjustmentsPanel({ state, set, histogram }) {
   return (
     <>
       <div className="panel-section">
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <span className="section-label">Histogram</span>
-          <button
-            className={`toggle-btn${state.showHistogram ? ' on' : ''}`}
-            onClick={() => set('showHistogram', !state.showHistogram)}
-          >
-            {state.showHistogram ? 'Hide' : 'Show'}
-          </button>
-        </div>
-        {state.showHistogram && <Histogram data={histogram} />}
+        <span className="section-label">Histogram</span>
+        <Histogram data={histogram} />
       </div>
 
       <div className="divider" />
