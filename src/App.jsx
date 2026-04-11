@@ -359,7 +359,7 @@ export default function App() {
             <span className="shortcut-hint">Ctrl+Z  undo</span>
             <span className="shortcut-hint">Ctrl+S  save</span>
           </div>
-          <button className="header-btn" onClick={() => window.open('https://en.wikipedia.org/wiki/Dither', '_blank')}>
+          <button className="header-btn" onClick={() => window.open('https://x.com/AlexAbian', '_blank')}>
             <svg viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"><circle cx="6" cy="6" r="5"/><path d="M6 5v4M6 3.5v.5"/></svg>
             About
           </button>
