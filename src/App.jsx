@@ -1,0 +1,421 @@
+import { useState, useEffect, useRef, useCallback } from 'react'
+import Sidebar from './components/Sidebar'
+import DitherPanel from './components/panels/DitherPanel'
+import FilesPanel from './components/panels/FilesPanel'
+import PalettePanel from './components/panels/PalettePanel'
+import AdjustmentsPanel from './components/panels/AdjustmentsPanel'
+import PresetsPanel from './components/panels/PresetsPanel'
+import ImageCanvas from './components/ImageCanvas'
+import { generateDefaultImage } from './utils/generators'
+
+// Keys that affect processing output (used for undo/redo history)
+const SETTINGS_KEYS = [
+  'ditherMethod','ditherAmount','ditherDiffusion','serpentine',
+  'paletteColors','paletteMethod','customColors',
+  'gamma','blacks','whites','contrast','saturation','hue',
+  'noiseCoverage','noiseIntensity','noiseSaturation',
+  'blurStrength','edgeStrength','blurPasses',
+  'displayWidth','displayHeight','keepRatio',
+]
+
+const DITHER_METHODS = [
+  'disabled','floyd-steinberg','jarvis','stucki','atkinson',
+  'burkes','sierra','two-row-sierra','sierra-lite','ordered','random',
+]
+
+const DEFAULTS = {
+  activePanel: 'dither',
+  originalPixels: null, originalWidth: null, originalHeight: null, sourceName: null,
+  displayWidth: 512, displayHeight: 512, keepRatio: true,
+  processedPixels: null, adjustedPixels: null, computedPalette: [], histogram: null,
+  quickPixels: null, quickWidth: null, quickHeight: null,
+  ditherMethod: 'atkinson', ditherAmount: 0.65, ditherDiffusion: 1, serpentine: true,
+  paletteColors: 8, paletteMethod: 'median-cut',
+  customColors: ['#000000','#333333','#666666','#999999','#cccccc','#ffffff','#c084fc','#6d28d9'],
+  gamma: 2.13, blacks: 0.112, whites: 0, contrast: 1, saturation: 1, hue: 0,
+  noiseCoverage: 0, noiseIntensity: 0.2, noiseSaturation: 1,
+  blurStrength: 0, edgeStrength: 12, blurPasses: 2,
+  showHistogram: false, comparing: false, splitCompare: false, processing: false,
+  exportFormat: 'png', exportQuality: 0.92,
+  gallery: [],
+}
+
+function makeThumb(pixels, w, h) {
+  const size = 80
+  const canvas = document.createElement('canvas')
+  canvas.width = size; canvas.height = size
+  const tmp = document.createElement('canvas')
+  tmp.width = w; tmp.height = h
+  tmp.getContext('2d').putImageData(new ImageData(new Uint8ClampedArray(pixels), w, h), 0, 0)
+  canvas.getContext('2d').drawImage(tmp, 0, 0, size, size)
+  return canvas.toDataURL('image/png')
+}
+
+export default function App() {
+  const [state, setState] = useState(DEFAULTS)
+  const workerRef   = useRef(null)
+  const quickWorkerRef = useRef(null)
+  const jobIdRef    = useRef(0)
+  const quickIdRef  = useRef(0)
+  const debounceRef = useRef(null)
+  const quickDebRef = useRef(null)
+  const historyRef  = useRef({ snapshots: [], pos: -1, ignoreNext: false })
+  const draggingRef = useRef(false) // true while a slider is being dragged
+
+  const set = useCallback((key, value) => setState(s => ({ ...s, [key]: value })), [])
+  const setMany = useCallback((updates) => setState(s => ({ ...s, ...updates })), [])
+
+  // ── History helpers ─────────────────────────────────────────
+  const snapSettings = (s) => SETTINGS_KEYS.reduce((o, k) => ({ ...o, [k]: s[k] }), {})
+
+  const pushHistory = useCallback((s) => {
+    const h = historyRef.current
+    if (h.ignoreNext) { h.ignoreNext = false; return }
+    const snap = snapSettings(s)
+    if (h.pos >= 0 && JSON.stringify(h.snapshots[h.pos]) === JSON.stringify(snap)) return
+    h.snapshots = h.snapshots.slice(0, h.pos + 1)
+    h.snapshots.push(snap)
+    if (h.snapshots.length > 60) h.snapshots.shift()
+    h.pos = h.snapshots.length - 1
+  }, [])
+
+  const undo = useCallback(() => {
+    const h = historyRef.current
+    if (h.pos <= 0) return
+    h.pos--; h.ignoreNext = true
+    setMany(h.snapshots[h.pos])
+  }, [setMany])
+
+  const redo = useCallback(() => {
+    const h = historyRef.current
+    if (h.pos >= h.snapshots.length - 1) return
+    h.pos++; h.ignoreNext = true
+    setMany(h.snapshots[h.pos])
+  }, [setMany])
+
+  // ── Workers ─────────────────────────────────────────────────
+  useEffect(() => {
+    const makeWorker = () => new Worker(
+      new URL('./workers/process.worker.js', import.meta.url),
+      { type: 'module' }
+    )
+    const w = makeWorker()
+    const qw = makeWorker()
+
+    w.onmessage = ({ data }) => {
+      if (data.id !== jobIdRef.current) return
+      if (data.error) { setMany({ processing: false }); return }
+      setMany({
+        processedPixels: data.processedPixels,
+        adjustedPixels:  data.adjustedPixels,
+        computedPalette: data.palette,
+        histogram: data.histogram,
+        processing: false,
+      })
+    }
+
+    qw.onmessage = ({ data }) => {
+      if (data.id !== quickIdRef.current) return
+      if (data.error || !data.quick) return
+      setMany({ quickPixels: data.processedPixels, quickWidth: data.width, quickHeight: data.height })
+    }
+
+    workerRef.current      = w
+    quickWorkerRef.current = qw
+    return () => { w.terminate(); qw.terminate() }
+  }, [])
+
+  // ── Send job to worker ───────────────────────────────────────
+  const sendJob = useCallback((s, quick = false) => {
+    const worker = quick ? quickWorkerRef.current : workerRef.current
+    if (!worker || !s.originalPixels) return
+    const id = quick ? ++quickIdRef.current : ++jobIdRef.current
+    if (!quick) setMany({ processing: true })
+
+    const pixelsCopy = s.originalPixels.slice()
+    worker.postMessage({
+      id, quick,
+      pixels: pixelsCopy,
+      origWidth: s.originalWidth, origHeight: s.originalHeight,
+      displayWidth: s.displayWidth, displayHeight: s.displayHeight,
+      settings: SETTINGS_KEYS.reduce((o, k) => ({ ...o, [k]: s[k] }), {}),
+    }, [pixelsCopy.buffer])
+  }, [setMany])
+
+  // ── Re-process when settings change ─────────────────────────
+  useEffect(() => {
+    if (!state.originalPixels) return
+    // Push to history
+    pushHistory(state)
+    // Debounce full job
+    clearTimeout(debounceRef.current)
+    debounceRef.current = setTimeout(() => sendJob(state, false), 80)
+    // Quick preview while dragging
+    if (draggingRef.current) {
+      clearTimeout(quickDebRef.current)
+      quickDebRef.current = setTimeout(() => sendJob(state, true), 30)
+    }
+    return () => { clearTimeout(debounceRef.current); clearTimeout(quickDebRef.current) }
+  }, SETTINGS_KEYS.map(k => state[k]).concat([state.originalPixels]))
+
+  // ── Load default image on mount ──────────────────────────────
+  useEffect(() => {
+    const imgData = generateDefaultImage(512, 512)
+    const pixels  = new Uint8ClampedArray(imgData.data)
+    setMany({ originalPixels: pixels, originalWidth: 512, originalHeight: 512,
+              displayWidth: 512, displayHeight: 512, sourceName: 'default' })
+  }, [])
+
+  // ── File load ────────────────────────────────────────────────
+  const handleFileLoad = useCallback((imageData, w, h, name) => {
+    const pixels = new Uint8ClampedArray(imageData.data)
+    setMany({ originalPixels: pixels, originalWidth: w, originalHeight: h,
+              displayWidth: w, displayHeight: h, sourceName: name })
+  }, [setMany])
+
+  const handleResetDefault = useCallback(() => {
+    const imgData = generateDefaultImage(512, 512)
+    setMany({ originalPixels: new Uint8ClampedArray(imgData.data),
+              originalWidth: 512, originalHeight: 512,
+              displayWidth: 512, displayHeight: 512, sourceName: 'default' })
+  }, [setMany])
+
+  // ── Save / Copy ──────────────────────────────────────────────
+  const handleSave = useCallback(() => {
+    if (!state.processedPixels || !state.displayWidth || !state.displayHeight) return
+    const canvas = document.createElement('canvas')
+    canvas.width = state.displayWidth; canvas.height = state.displayHeight
+    canvas.getContext('2d').putImageData(
+      new ImageData(new Uint8ClampedArray(state.processedPixels), state.displayWidth, state.displayHeight), 0, 0
+    )
+    const fmt  = state.exportFormat || 'png'
+    const mime = fmt === 'jpeg' ? 'image/jpeg' : fmt === 'webp' ? 'image/webp' : 'image/png'
+    const a = document.createElement('a')
+    a.href = canvas.toDataURL(mime, state.exportQuality || 0.92)
+    a.download = `${state.sourceName || 'dither'}-${state.ditherMethod}.${fmt}`
+    a.click()
+
+    const thumb = makeThumb(state.processedPixels, state.displayWidth, state.displayHeight)
+    setMany({ gallery: [{ thumb, pixels: state.originalPixels.slice(), width: state.originalWidth, height: state.originalHeight, name: state.sourceName || 'image' }, ...state.gallery].slice(0, 9) })
+  }, [state, setMany])
+
+  const handleCopy = useCallback(async () => {
+    if (!state.processedPixels || !state.displayWidth || !state.displayHeight) return
+    const canvas = document.createElement('canvas')
+    canvas.width = state.displayWidth; canvas.height = state.displayHeight
+    canvas.getContext('2d').putImageData(
+      new ImageData(new Uint8ClampedArray(state.processedPixels), state.displayWidth, state.displayHeight), 0, 0
+    )
+    canvas.toBlob(async (blob) => {
+      try { await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]) }
+      catch { alert('Copy to clipboard failed — browser may not support it.') }
+    })
+  }, [state])
+
+  // ── Keyboard shortcuts ───────────────────────────────────────
+  useEffect(() => {
+    const onKeyDown = (e) => {
+      if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return
+      const k = e.key
+
+      if (k === '1') { set('activePanel', 'files');        return }
+      if (k === '2') { set('activePanel', 'dither');       return }
+      if (k === '3') { set('activePanel', 'palette');      return }
+      if (k === '4') { set('activePanel', 'adjustments');  return }
+      if (k === '5') { set('activePanel', 'presets');      return }
+
+      if (k === ']') {
+        setState(s => {
+          const i = DITHER_METHODS.indexOf(s.ditherMethod)
+          return { ...s, ditherMethod: DITHER_METHODS[(i + 1) % DITHER_METHODS.length] }
+        })
+        return
+      }
+      if (k === '[') {
+        setState(s => {
+          const i = DITHER_METHODS.indexOf(s.ditherMethod)
+          return { ...s, ditherMethod: DITHER_METHODS[(i - 1 + DITHER_METHODS.length) % DITHER_METHODS.length] }
+        })
+        return
+      }
+
+      if (k === ' ') {
+        e.preventDefault()
+        set('splitCompare', !state.splitCompare)
+        return
+      }
+
+      if ((e.ctrlKey || e.metaKey) && k === 'z' && !e.shiftKey) { e.preventDefault(); undo(); return }
+      if ((e.ctrlKey || e.metaKey) && (k === 'y' || (k === 'z' && e.shiftKey))) { e.preventDefault(); redo(); return }
+      if ((e.ctrlKey || e.metaKey) && k === 's') { e.preventDefault(); handleSave(); return }
+    }
+    window.addEventListener('keydown', onKeyDown)
+    return () => window.removeEventListener('keydown', onKeyDown)
+  }, [state.splitCompare, set, undo, redo, handleSave])
+
+  // ── Global drag-to-load ──────────────────────────────────────
+  const handleGlobalDrop = useCallback((e) => {
+    e.preventDefault()
+    const file = e.dataTransfer.files[0]
+    if (!file || !file.type.startsWith('image/')) return
+    const url = URL.createObjectURL(file)
+    const img = new Image()
+    img.onload = () => {
+      const c = document.createElement('canvas')
+      c.width = img.naturalWidth; c.height = img.naturalHeight
+      c.getContext('2d').drawImage(img, 0, 0)
+      URL.revokeObjectURL(url)
+      handleFileLoad(c.getContext('2d').getImageData(0, 0, c.width, c.height), c.width, c.height, file.name.replace(/\.[^.]+$/,''))
+    }
+    img.src = url
+  }, [handleFileLoad])
+
+  // Ctrl+V global paste
+  useEffect(() => {
+    const onKeyDown = (e) => {
+      if (!(e.ctrlKey || e.metaKey) || e.key !== 'v') return
+      if (e.target.tagName === 'INPUT') return
+      navigator.clipboard.read().then(items => {
+        for (const item of items)
+          for (const type of item.types)
+            if (type.startsWith('image/')) {
+              item.getType(type).then(blob => {
+                const url = URL.createObjectURL(blob)
+                const img = new Image()
+                img.onload = () => {
+                  const c = document.createElement('canvas')
+                  c.width = img.naturalWidth; c.height = img.naturalHeight
+                  c.getContext('2d').drawImage(img, 0, 0)
+                  URL.revokeObjectURL(url)
+                  handleFileLoad(c.getContext('2d').getImageData(0, 0, c.width, c.height), c.width, c.height, 'pasted')
+                }
+                img.src = url
+              })
+              return
+            }
+      }).catch(() => {})
+    }
+    window.addEventListener('keydown', onKeyDown)
+    return () => window.removeEventListener('keydown', onKeyDown)
+  }, [handleFileLoad])
+
+  // ── Slider drag tracking (for quick preview) ─────────────────
+  useEffect(() => {
+    const onDown = (e) => { if (e.target.type === 'range') draggingRef.current = true }
+    const onUp   = () => {
+      if (!draggingRef.current) return
+      draggingRef.current = false
+      setMany({ quickPixels: null, quickWidth: null, quickHeight: null })
+    }
+    window.addEventListener('pointerdown', onDown)
+    window.addEventListener('pointerup',   onUp)
+    return () => { window.removeEventListener('pointerdown', onDown); window.removeEventListener('pointerup', onUp) }
+  }, [setMany])
+
+  const panelTitle = { files:'Files', dither:'Dither', palette:'Palette', adjustments:'Adjustments', presets:'Presets' }[state.activePanel]
+  const colorCount = state.computedPalette?.length ?? 0
+
+  return (
+    <div className="app" onDragOver={e => e.preventDefault()} onDrop={handleGlobalDrop}>
+      <header className="app-header">
+        <div className="app-header-left">
+          <div className="app-logo">
+            <svg viewBox="0 0 14 14" fill="none">
+              <rect x="1" y="1" width="4" height="4" rx="0.5" fill="white" opacity="0.9"/>
+              <rect x="6" y="1" width="4" height="4" rx="0.5" fill="white" opacity="0.55"/>
+              <rect x="9" y="4" width="4" height="4" rx="0.5" fill="white" opacity="0.3"/>
+              <rect x="1" y="6" width="4" height="4" rx="0.5" fill="white" opacity="0.55"/>
+              <rect x="6" y="6" width="4" height="4" rx="0.5" fill="white" opacity="0.75"/>
+              <rect x="3" y="9" width="4" height="4" rx="0.5" fill="white" opacity="0.4"/>
+            </svg>
+          </div>
+          <span className="app-title">Dither Studio</span>
+        </div>
+        <div className="app-header-right">
+          <div className="shortcut-hints">
+            <span className="shortcut-hint">[ / ]  method</span>
+            <span className="shortcut-hint">Space  compare</span>
+            <span className="shortcut-hint">Ctrl+Z  undo</span>
+            <span className="shortcut-hint">Ctrl+S  save</span>
+          </div>
+          <button className="header-btn" onClick={() => window.open('https://en.wikipedia.org/wiki/Dither', '_blank')}>
+            <svg viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"><circle cx="6" cy="6" r="5"/><path d="M6 5v4M6 3.5v.5"/></svg>
+            About
+          </button>
+        </div>
+      </header>
+
+      <div className="app-body">
+        <ImageCanvas
+          pixels={state.processedPixels}
+          originalPixels={state.adjustedPixels}
+          width={state.displayWidth}
+          height={state.displayHeight}
+          splitCompare={state.splitCompare}
+          processing={state.processing}
+          quickPixels={state.quickPixels}
+          quickWidth={state.quickWidth}
+          quickHeight={state.quickHeight}
+        />
+
+        <aside className="panel">
+          <div className="panel-header">
+            <h2 className="panel-title">{panelTitle}</h2>
+          </div>
+          <div className="panel-body">
+            {state.activePanel === 'dither' && <DitherPanel state={state} set={set} />}
+            {state.activePanel === 'files' && (
+              <FilesPanel
+                state={state} set={set}
+                onFileLoad={handleFileLoad}
+                onResetDefault={handleResetDefault}
+                gallery={state.gallery}
+                onGallerySelect={(item) => setMany({ originalPixels: item.pixels, originalWidth: item.width, originalHeight: item.height, displayWidth: item.width, displayHeight: item.height, sourceName: item.name })}
+                onClearGallery={() => set('gallery', [])}
+                onSave={handleSave}
+                onCopy={handleCopy}
+              />
+            )}
+            {state.activePanel === 'palette' && <PalettePanel state={state} set={set} computedPalette={state.computedPalette} />}
+            {state.activePanel === 'adjustments' && <AdjustmentsPanel state={state} set={set} histogram={state.histogram} />}
+            {state.activePanel === 'presets' && <PresetsPanel state={state} setMany={setMany} />}
+          </div>
+        </aside>
+
+        <Sidebar active={state.activePanel} onSelect={id => set('activePanel', id)} />
+      </div>
+
+      <div className="status-bar">
+        <div className="status-info">
+          {state.displayWidth && state.displayHeight && (
+            <span className="status-chip"><span className="status-chip-dot" />{state.displayWidth} × {state.displayHeight}</span>
+          )}
+          {colorCount > 0 && <span className="status-chip">{colorCount} colors</span>}
+          {state.ditherMethod !== 'disabled' && <span className="status-chip">{state.ditherMethod}</span>}
+          {state.serpentine && ['floyd-steinberg','jarvis','stucki','atkinson','burkes','sierra','two-row-sierra','sierra-lite'].includes(state.ditherMethod) && (
+            <span className="status-chip">serpentine</span>
+          )}
+        </div>
+        <div style={{ display:'flex', gap:6, alignItems:'center' }}>
+          <button
+            className={`compare-btn${state.splitCompare ? ' active' : ''}`}
+            onClick={() => set('splitCompare', !state.splitCompare)}
+            title="Space to toggle"
+          >
+            {state.splitCompare ? 'Split On' : 'Split Compare'}
+          </button>
+          <button
+            className={`compare-btn${state.comparing ? ' active' : ''}`}
+            onMouseDown={() => set('comparing', true)}
+            onMouseUp={() => set('comparing', false)}
+            onMouseLeave={() => set('comparing', false)}
+            onTouchStart={() => set('comparing', true)}
+            onTouchEnd={() => set('comparing', false)}
+          >
+            Hold to Compare
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
