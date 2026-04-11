@@ -2,7 +2,7 @@ import { useEffect, useRef, useState, useCallback } from 'react'
 
 export default function ImageCanvas({
   pixels, width, height, displayWidth, displayHeight, pixelSize,
-  originalPixels, splitCompare, processing, quickPixels, quickWidth, quickHeight,
+  originalPixels, splitCompare, comparing, processing, quickPixels, quickWidth, quickHeight,
 }) {
   const canvasRef  = useRef(null)
   const areaRef    = useRef(null)
@@ -18,6 +18,12 @@ export default function ImageCanvas({
     canvas.width  = width
     canvas.height = height
     const ctx = canvas.getContext('2d')
+
+    // "Hold to Compare" — show pre-dither adjusted image
+    if (comparing && originalPixels) {
+      try { ctx.putImageData(new ImageData(new Uint8ClampedArray(originalPixels), width, height), 0, 0) } catch {}
+      return
+    }
 
     if (splitCompare && originalPixels) {
       // Draw dithered on full canvas first
@@ -61,7 +67,7 @@ export default function ImageCanvas({
         ctx.putImageData(new ImageData(new Uint8ClampedArray(pixels), width, height), 0, 0)
       } catch {}
     }
-  }, [pixels, originalPixels, splitCompare, splitX, width, height])
+  }, [pixels, originalPixels, splitCompare, comparing, splitX, width, height])
 
   // ── Wheel zoom ──────────────────────────────────────────────
   const handleWheel = useCallback((e) => {
@@ -117,9 +123,11 @@ export default function ImageCanvas({
 
   const hasImage = pixels && width && height
 
-  // Cursor: ew-resize near split line, grab otherwise
+  // Cursor: ew-resize near split line, grabbing while panning, grab otherwise
   const getCursor = () => {
-    if (!splitCompare) return dragRef.current?.type === 'pan' ? 'grabbing' : 'grab'
+    if (dragRef.current?.type === 'pan') return 'grabbing'
+    if (dragRef.current?.type === 'split') return 'ew-resize'
+    if (!splitCompare) return 'grab'
     return 'ew-resize'
   }
 

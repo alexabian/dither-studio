@@ -20,8 +20,9 @@ export default function FilesPanel({ state, set, onFileLoad, onResetDefault, onC
     img.onload = () => {
       const canvas = document.createElement('canvas')
       canvas.width = img.naturalWidth; canvas.height = img.naturalHeight
-      canvas.getContext('2d').drawImage(img, 0, 0)
-      const imageData = canvas.getContext('2d').getImageData(0, 0, canvas.width, canvas.height)
+      const ctx = canvas.getContext('2d')
+      ctx.drawImage(img, 0, 0)
+      const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height)
       URL.revokeObjectURL(url)
       onFileLoad(imageData, img.naturalWidth, img.naturalHeight, file.name.replace(/\.[^.]+$/, ''))
     }

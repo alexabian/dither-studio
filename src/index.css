@@ -1068,3 +1068,95 @@ input[type=range]::-moz-range-thumb {
 }
 .toggle-switch input:checked + .toggle-slider { background: var(--accent-2); }
 .toggle-switch input:checked + .toggle-slider::before { transform: translateX(14px); }
+
+/* ── Mobile responsive ─────────────────────────────────────── */
+@media (max-width: 700px) {
+  :root {
+    --header-h: 48px;
+    --status-h: 42px;
+    --panel-w: 100%;
+    --sidebar-w: 100%;
+  }
+
+  /* Stack vertically: canvas → panel → tab bar */
+  .app-body {
+    flex-direction: column;
+  }
+
+  /* Canvas takes upper portion */
+  .canvas-area {
+    flex: none;
+    height: 42vh;
+    min-height: 180px;
+  }
+
+  /* Panel fills remaining space above tab bar */
+  .panel {
+    flex: 1;
+    width: 100%;
+    border-left: none;
+    border-top: 1px solid var(--border);
+    min-height: 0;
+  }
+
+  /* Sidebar becomes a horizontal bottom tab bar */
+  .sidebar {
+    width: 100%;
+    height: var(--sidebar-w); /* reuse as height */
+    flex-direction: row;
+    justify-content: space-around;
+    align-items: center;
+    padding: 0 8px;
+    border-left: none;
+    border-top: 1px solid var(--sidebar-border);
+    flex-shrink: 0;
+    order: 3; /* below panel */
+  }
+
+  .sidebar-btn {
+    width: 44px; height: 44px;
+    flex-direction: column;
+    gap: 3px;
+  }
+
+  /* Hide tooltips on mobile (they go off-screen) */
+  .sidebar-tooltip { display: none; }
+
+  /* Compact header */
+  .shortcut-hints { display: none; }
+  .header-btn span { display: none; }
+  .header-btn { padding: 6px 8px; }
+
+  /* Status bar: wrap onto two lines if needed */
+  .status-bar {
+    height: auto;
+    min-height: var(--status-h);
+    flex-wrap: wrap;
+    gap: 6px;
+    padding: 6px 12px;
+  }
+
+  /* Zoom controls repositioned for mobile */
+  .zoom-controls {
+    bottom: auto;
+    top: 8px;
+    left: 8px;
+  }
+
+  /* Quick preview repositioned */
+  .quick-preview {
+    top: auto;
+    bottom: 8px;
+    left: 8px;
+  }
+
+  /* Crop modal fills screen on mobile */
+  .crop-modal {
+    max-width: 100vw;
+    max-height: 100vh;
+    border-radius: 0;
+    height: 100%;
+    width: 100%;
+  }
+  .crop-overlay { padding: 0; }
+}

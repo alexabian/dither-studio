@@ -191,12 +191,15 @@ export default function App() {
 
   // ── Save / Copy ──────────────────────────────────────────────
   const handleSave = useCallback(() => {
-    if (!state.processedPixels || !state.displayWidth || !state.displayHeight) return
+    if (!state.processedPixels) return
+    // Use actual processed dimensions (may differ from displayWidth when pixelSize > 1)
+    const pw = state.processedWidth  || state.displayWidth
+    const ph = state.processedHeight || state.displayHeight
+    if (!pw || !ph) return
     const canvas = document.createElement('canvas')
-    canvas.width = state.displayWidth; canvas.height = state.displayHeight
-    canvas.getContext('2d').putImageData(
-      new ImageData(new Uint8ClampedArray(state.processedPixels), state.displayWidth, state.displayHeight), 0, 0
-    )
+    canvas.width = pw; canvas.height = ph
+    const ctx = canvas.getContext('2d')
+    ctx.putImageData(new ImageData(new Uint8ClampedArray(state.processedPixels), pw, ph), 0, 0)
     const fmt  = state.exportFormat || 'png'
     const mime = fmt === 'jpeg' ? 'image/jpeg' : fmt === 'webp' ? 'image/webp' : 'image/png'
     const a = document.createElement('a')
@@ -204,20 +207,27 @@ export default function App() {
     a.download = `${state.sourceName || 'dither'}-${state.ditherMethod}.${fmt}`
     a.click()
 
-    const thumb = makeThumb(state.processedPixels, state.displayWidth, state.displayHeight)
+    const thumb = makeThumb(state.processedPixels, pw, ph)
     setMany({ gallery: [{ thumb, pixels: state.originalPixels.slice(), width: state.originalWidth, height: state.originalHeight, name: state.sourceName || 'image' }, ...state.gallery].slice(0, 9) })
   }, [state, setMany])
 
   const handleCopy = useCallback(async () => {
-    if (!state.processedPixels || !state.displayWidth || !state.displayHeight) return
+    if (!state.processedPixels) return
+    const pw = state.processedWidth  || state.displayWidth
+    const ph = state.processedHeight || state.displayHeight
+    if (!pw || !ph) return
     const canvas = document.createElement('canvas')
-    canvas.width = state.displayWidth; canvas.height = state.displayHeight
-    canvas.getContext('2d').putImageData(
-      new ImageData(new Uint8ClampedArray(state.processedPixels), state.displayWidth, state.displayHeight), 0, 0
-    )
+    canvas.width = pw; canvas.height = ph
+    const ctx = canvas.getContext('2d')
+    ctx.putImageData(new ImageData(new Uint8ClampedArray(state.processedPixels), pw, ph), 0, 0)
     canvas.toBlob(async (blob) => {
       try { await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]) }
-      catch { alert('Copy to clipboard failed — browser may not support it.') }
+      catch (err) {
+        const msg = err?.name === 'NotAllowedError'
+          ? 'Clipboard access denied — allow it in your browser settings.'
+          : 'Copy to clipboard failed — your browser may not support this.'
+        alert(msg)
+      }
     })
   }, [state])
 
@@ -272,9 +282,10 @@ export default function App() {
     img.onload = () => {
       const c = document.createElement('canvas')
       c.width = img.naturalWidth; c.height = img.naturalHeight
-      c.getContext('2d').drawImage(img, 0, 0)
+      const ctx = c.getContext('2d')
+      ctx.drawImage(img, 0, 0)
       URL.revokeObjectURL(url)
-      handleFileLoad(c.getContext('2d').getImageData(0, 0, c.width, c.height), c.width, c.height, file.name.replace(/\.[^.]+$/,''))
+      handleFileLoad(ctx.getImageData(0, 0, c.width, c.height), c.width, c.height, file.name.replace(/\.[^.]+$/,''))
     }
     img.src = url
   }, [handleFileLoad])
@@ -294,9 +305,10 @@ export default function App() {
                 img.onload = () => {
                   const c = document.createElement('canvas')
                   c.width = img.naturalWidth; c.height = img.naturalHeight
-                  c.getContext('2d').drawImage(img, 0, 0)
+                  const ctx = c.getContext('2d')
+                  ctx.drawImage(img, 0, 0)
                   URL.revokeObjectURL(url)
-                  handleFileLoad(c.getContext('2d').getImageData(0, 0, c.width, c.height), c.width, c.height, 'pasted')
+                  handleFileLoad(ctx.getImageData(0, 0, c.width, c.height), c.width, c.height, 'pasted')
                 }
                 img.src = url
               })
@@ -364,6 +376,7 @@ export default function App() {
           displayHeight={state.displayHeight}
           pixelSize={state.pixelSize}
           splitCompare={state.splitCompare}
+          comparing={state.comparing}
           processing={state.processing}
           quickPixels={state.quickPixels}
           quickWidth={state.quickWidth}
