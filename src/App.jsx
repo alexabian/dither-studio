@@ -205,7 +205,7 @@ export default function App() {
   }, [setMany])
 
   // ── Save / Copy ──────────────────────────────────────────────
-  const handleSave = useCallback(() => {
+  const handleSave = useCallback(async () => {
     if (!state.processedPixels) return
     const pw = state.processedWidth  || state.displayWidth
     const ph = state.processedHeight || state.displayHeight
@@ -220,27 +220,40 @@ export default function App() {
       const rand     = Math.floor(10000 + Math.random() * 90000)
       const filename = `ditherstudio${rand}.${fmt}`
 
-      // Convert canvas → data URL → Blob → object URL, all synchronously.
-      // Keeps the call inside the user-gesture context (unlike async toBlob),
-      // and avoids Safari navigating to a data: URL instead of downloading.
+      // Build blob synchronously so user-gesture context is still alive
       const dataURL = canvas.toDataURL(mime, quality)
       const binary  = atob(dataURL.split(',')[1])
       const bytes   = new Uint8Array(binary.length)
       for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i)
-      const blobURL = URL.createObjectURL(new Blob([bytes], { type: mime }))
+      const blob = new Blob([bytes], { type: mime })
 
-      const a = document.createElement('a')
-      a.href = blobURL
-      a.download = filename
-      document.body.appendChild(a)
-      a.click()
-      document.body.removeChild(a)
-      setTimeout(() => URL.revokeObjectURL(blobURL), 250)
+      // ── Primary: File System Access API (Chrome 86+, Edge 86+) ──────
+      // Shows a native OS save dialog — zero risk of page navigation.
+      if ('showSaveFilePicker' in window) {
+        const handle   = await window.showSaveFilePicker({
+          suggestedName: filename,
+          types: [{ description: 'Image file', accept: { [mime]: [`.${fmt}`] } }],
+        })
+        const writable = await handle.createWritable()
+        await writable.write(blob)
+        await writable.close()
+      } else {
+        // ── Fallback: blob URL anchor (Firefox, Safari, older browsers) ──
+        const blobURL = URL.createObjectURL(blob)
+        const a = document.createElement('a')
+        a.href = blobURL
+        a.download = filename
+        document.body.appendChild(a)
+        a.click()
+        document.body.removeChild(a)
+        setTimeout(() => URL.revokeObjectURL(blobURL), 1000)
+      }
 
       toast(`Saved as ${filename}`, 'success')
       const thumb = makeThumb(state.processedPixels, pw, ph)
       setMany({ gallery: [{ thumb, pixels: state.originalPixels.slice(), width: state.originalWidth, height: state.originalHeight, name: state.sourceName || 'image' }, ...state.gallery].slice(0, 9) })
     } catch (err) {
+      if (err?.name === 'AbortError') return  // user cancelled the save dialog
       console.error('Save error:', err)
       toast('Save failed — see console for details.', 'error')
     }
