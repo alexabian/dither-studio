@@ -270,6 +270,7 @@ input { font-family: inherit; }
 
 .panel-body {
   flex: 1;
+  min-height: 0; /* required for flex child scrolling */
   overflow-y: auto;
   overflow-x: hidden;
   padding: 14px 16px;
@@ -755,6 +756,23 @@ input[type=range]::-moz-range-thumb {
   position: relative;
 }
 .gallery-thumb:hover { border-color: var(--accent-2); transform: scale(1.03); }
+.gallery-thumb-delete {
+  position: absolute;
+  top: 3px; right: 3px;
+  width: 16px; height: 16px;
+  border-radius: 50%;
+  background: rgba(0,0,0,0.7);
+  border: 1px solid rgba(255,255,255,0.15);
+  color: rgba(255,255,255,0.8);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 9px;
+  line-height: 1;
+  opacity: 0;
+  transition: opacity 0.12s, background 0.1s;
+  z-index: 2;
+}
+.gallery-thumb:hover .gallery-thumb-delete { opacity: 1; }
+.gallery-thumb-delete:hover { background: rgba(200,30,30,0.85); color: #fff; border-color: transparent; }
 .gallery-thumb canvas,
 .gallery-thumb img {
   width: 100%; height: 100%;
@@ -1163,13 +1181,12 @@ input[type=range]::-moz-range-thumb {
 .toggle-switch input:checked + .toggle-slider { background: var(--accent-2); }
 .toggle-switch input:checked + .toggle-slider::before { transform: translateX(14px); }
 
-/* ── Mobile responsive ─────────────────────────────────────── */
+/* ── Mobile responsive (portrait) ─────────────────────────── */
 @media (max-width: 700px) {
   :root {
-    --header-h: 48px;
-    --status-h: 42px;
+    --header-h: 44px;
+    --status-h: 36px;
     --panel-w: 100%;
-    --sidebar-w: 100%;
   }
 
   /* Stack vertically: canvas → panel → tab bar */
@@ -1177,43 +1194,48 @@ input[type=range]::-moz-range-thumb {
     flex-direction: column;
   }
 
-  /* Canvas takes upper portion */
+  /* Canvas: adaptive height, never too small or too tall */
   .canvas-area {
     flex: none;
-    height: 42vh;
-    min-height: 180px;
+    height: clamp(180px, 38vh, 300px);
   }
 
   /* Panel fills remaining space above tab bar */
   .panel {
     flex: 1;
+    min-height: 0;
     width: 100%;
     border-left: none;
     border-top: 1px solid var(--border);
-    min-height: 0;
+  }
+
+  /* panel-body tighter on mobile */
+  .panel-body {
+    padding: 10px 12px;
+    gap: 14px;
   }
 
   /* Sidebar becomes a horizontal bottom tab bar */
   .sidebar {
     width: 100%;
-    height: var(--sidebar-w); /* reuse as height */
+    height: 50px; /* explicit — not reusing --sidebar-w */
     flex-direction: row;
     justify-content: space-around;
     align-items: center;
-    padding: 0 8px;
+    padding: 0 4px;
     border-left: none;
     border-top: 1px solid var(--sidebar-border);
     flex-shrink: 0;
-    order: 3; /* below panel */
+    order: 3;
   }
 
   .sidebar-btn {
-    width: 44px; height: 44px;
+    width: 48px; height: 44px;
     flex-direction: column;
     gap: 3px;
   }
 
-  /* Hide tooltips on mobile (they go off-screen) */
+  /* Hide tooltips on mobile */
   .sidebar-tooltip { display: none; }
 
   /* Compact header */
@@ -1221,23 +1243,53 @@ input[type=range]::-moz-range-thumb {
   .header-btn span { display: none; }
   .header-btn { padding: 6px 8px; }
 
-  /* Status bar: wrap onto two lines if needed */
+  /* Larger touch target for theme toggle */
+  .theme-toggle-btn {
+    width: 36px;
+    height: 36px;
+  }
+
+  /* Status bar */
   .status-bar {
     height: auto;
     min-height: var(--status-h);
     flex-wrap: wrap;
-    gap: 6px;
-    padding: 6px 12px;
+    gap: 4px;
+    padding: 4px 10px;
   }
 
-  /* Zoom controls repositioned for mobile */
+  /* Limit palette swatches on small screens */
+  .status-chip--swatches {
+    max-width: 96px;
+    overflow: hidden;
+  }
+
+  /* Larger slider nudge buttons for touch */
+  .slider-nudge {
+    width: 28px;
+    height: 28px;
+    font-size: 15px;
+  }
+
+  /* Larger range thumb for touch */
+  input[type=range]::-webkit-slider-thumb {
+    width: 20px;
+    height: 20px;
+  }
+  input[type=range]::-moz-range-thumb {
+    width: 20px;
+    height: 20px;
+  }
+
+  /* Zoom controls: top-right to avoid clashing with quick preview */
   .zoom-controls {
     bottom: auto;
     top: 8px;
-    left: 8px;
+    left: auto;
+    right: 8px;
   }
 
-  /* Quick preview repositioned */
+  /* Quick preview: bottom-left (opposite corner from zoom) */
   .quick-preview {
     top: auto;
     bottom: 8px;
@@ -1253,4 +1305,132 @@ input[type=range]::-moz-range-thumb {
     width: 100%;
   }
   .crop-overlay { padding: 0; }
+}
+
+/* ── Landscape mobile (phones rotated) ─────────────────────── */
+@media (max-width: 900px) and (max-height: 500px) {
+  /* Keep desktop-style horizontal layout but tighten it */
+  .panel {
+    width: 260px;
+    min-width: 260px;
+  }
+  .panel-body {
+    padding: 10px 12px;
+    gap: 12px;
+  }
+  .sidebar-tooltip { display: none; }
+}
+
+/* ── Toast notifications ───────────────────────────────────── */
+.toast-container {
+  position: fixed;
+  bottom: calc(var(--status-h) + 12px);
+  left: 16px;
+  z-index: 2000;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  pointer-events: none;
+}
+
+.toast {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 8px 13px;
+  border-radius: var(--r);
+  font-size: 11.5px;
+  font-weight: 500;
+  color: #fff;
+  background: #1a1a18;
+  border: 1px solid rgba(255,255,255,0.1);
+  box-shadow: 0 4px 16px rgba(0,0,0,0.4);
+  animation: toastIn 0.18s ease, toastOut 0.25s ease 3.25s forwards;
+  max-width: 340px;
+  line-height: 1.4;
+}
+
+.toast svg { width: 12px; height: 12px; flex-shrink: 0; }
+
+.toast--success { background: #14532d; border-color: #16a34a; }
+.toast--error   { background: #450a0a; border-color: #dc2626; }
+.toast--info    { background: #1e3a5f; border-color: #3b82f6; }
+
+@keyframes toastIn {
+  from { opacity: 0; transform: translateY(8px) scale(0.97); }
+  to   { opacity: 1; transform: none; }
+}
+@keyframes toastOut {
+  from { opacity: 1; transform: none; }
+  to   { opacity: 0; transform: translateY(-4px); }
+}
+
+/* ── Zoom Fit / 100% text buttons ──────────────────────────── */
+.zoom-btn--text {
+  width: auto;
+  padding: 0 6px;
+  font-size: 10px;
+  font-family: var(--font-mono);
+  border-radius: var(--r-sm);
+}
+
+/* ── Processing time chip ──────────────────────────────────── */
+.status-chip--time {
+  gap: 4px;
+  color: var(--text-3);
+}
+.status-chip--time svg { width: 10px; height: 10px; opacity: 0.7; }
+
+/* ── Collapsible section labels ────────────────────────────── */
+.collapsible-label {
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  user-select: none;
+  transition: color 0.12s;
+}
+.collapsible-label:hover { color: var(--text-2); }
+
+.collapse-chevron {
+  width: 10px;
+  height: 10px;
+  color: var(--text-4);
+  flex-shrink: 0;
+}
+
+/* Spacer that pushes hint + chevron to the right when there's no hint */
+.collapsible-label > .collapse-chevron:last-child {
+  margin-left: auto;
+}
+
+/* Inline hint shown when section is collapsed (e.g. "512 × 512", "3 saved") */
+.section-label-hint {
+  font-size: 10px;
+  font-family: var(--font-mono);
+  font-weight: 400;
+  color: var(--text-4);
+  margin-left: auto;
+  margin-right: 4px;
+  white-space: nowrap;
+}
+
+/* When clear-btn is inside a collapsible-label, don't push it via margin-left auto */
+.collapsible-label .clear-btn {
+  margin-left: 0;
+}
+
+/* ── Slider inline text input ──────────────────────────────── */
+.slider-value-input {
+  width: 52px;
+  background: var(--surface-3);
+  border: 1px solid var(--accent-2);
+  border-radius: var(--r-sm);
+  padding: 1px 5px;
+  font-size: 11px;
+  font-family: var(--font-mono);
+  color: var(--text);
+  outline: none;
+  text-align: right;
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent-2) 20%, transparent);
 }

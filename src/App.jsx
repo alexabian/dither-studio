@@ -6,6 +6,7 @@ import PalettePanel from './components/panels/PalettePanel'
 import AdjustmentsPanel from './components/panels/AdjustmentsPanel'
 import PresetsPanel from './components/panels/PresetsPanel'
 import ImageCanvas from './components/ImageCanvas'
+import { useToast, ToastContainer } from './components/ui/Toast'
 import { generateDefaultImage } from './utils/generators'
 
 // Keys that affect processing output (used for undo/redo history)
@@ -39,6 +40,7 @@ const DEFAULTS = {
   showHistogram: false, comparing: false, splitCompare: false, processing: false,
   exportFormat: 'png', exportQuality: 0.92,
   gallery: [],
+  lastProcessMs: null,
 }
 
 function makeThumb(pixels, w, h) {
@@ -62,6 +64,7 @@ function loadDarkMode() {
 export default function App() {
   const [state, setState] = useState(DEFAULTS)
   const [darkMode, setDarkMode] = useState(loadDarkMode)
+  const { toasts, toast } = useToast()
   const workerRef   = useRef(null)
   const quickWorkerRef = useRef(null)
   const jobIdRef    = useRef(0)
@@ -70,6 +73,7 @@ export default function App() {
   const quickDebRef = useRef(null)
   const historyRef  = useRef({ snapshots: [], pos: -1, ignoreNext: false })
   const draggingRef = useRef(false) // true while a slider is being dragged
+  const jobStartRef = useRef(null)  // timestamp when full job was sent
 
   const set = useCallback((key, value) => setState(s => ({ ...s, [key]: value })), [])
   const setMany = useCallback((updates) => setState(s => ({ ...s, ...updates })), [])
@@ -114,6 +118,8 @@ export default function App() {
     w.onmessage = ({ data }) => {
       if (data.id !== jobIdRef.current) return
       if (data.error) { setMany({ processing: false }); return }
+      const elapsed = jobStartRef.current ? Date.now() - jobStartRef.current : null
+      jobStartRef.current = null
       setMany({
         processedPixels: data.processedPixels,
         processedWidth:  data.width,
@@ -122,6 +128,7 @@ export default function App() {
         computedPalette: data.palette,
         histogram: data.histogram,
         processing: false,
+        lastProcessMs: elapsed,
       })
     }
 
@@ -141,7 +148,7 @@ export default function App() {
     const worker = quick ? quickWorkerRef.current : workerRef.current
     if (!worker || !s.originalPixels) return
     const id = quick ? ++quickIdRef.current : ++jobIdRef.current
-    if (!quick) setMany({ processing: true })
+    if (!quick) { setMany({ processing: true }); jobStartRef.current = Date.now() }
 
     const pixelsCopy = s.originalPixels.slice()
     worker.postMessage({
@@ -214,6 +221,7 @@ export default function App() {
     a.href = canvas.toDataURL(mime, state.exportQuality || 0.92)
     a.download = `${state.sourceName || 'dither'}-${state.ditherMethod}.${fmt}`
     a.click()
+    toast(`Saved as ${a.download}`, 'success')
 
     const thumb = makeThumb(state.processedPixels, pw, ph)
     setMany({ gallery: [{ thumb, pixels: state.originalPixels.slice(), width: state.originalWidth, height: state.originalHeight, name: state.sourceName || 'image' }, ...state.gallery].slice(0, 9) })
@@ -229,12 +237,14 @@ export default function App() {
     const ctx = canvas.getContext('2d')
     ctx.putImageData(new ImageData(new Uint8ClampedArray(state.processedPixels), pw, ph), 0, 0)
     canvas.toBlob(async (blob) => {
-      try { await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]) }
-      catch (err) {
+      try {
+        await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })])
+        toast('Image copied to clipboard!', 'success')
+      } catch (err) {
         const msg = err?.name === 'NotAllowedError'
           ? 'Clipboard access denied — allow it in your browser settings.'
           : 'Copy to clipboard failed — your browser may not support this.'
-        alert(msg)
+        toast(msg, 'error')
       }
     })
   }, [state])
@@ -355,7 +365,7 @@ export default function App() {
   return (
     <div className={`app${darkMode ? ' dark' : ''}`} onDragOver={e => e.preventDefault()} onDrop={handleGlobalDrop}>
       <header className="app-header">
-        <div className="app-header-left">
+        <div className="app-header-left" onClick={() => set('activePanel', 'files')} style={{ cursor: 'pointer' }}>
           <div className="app-logo">
             <svg viewBox="0 0 14 14" fill="none">
               <rect x="1" y="1" width="4" height="4" rx="0.5" fill="white" opacity="0.9"/>
@@ -387,7 +397,7 @@ export default function App() {
               </svg>
             )}
           </button>
-          <button className="header-btn" onClick={() => window.open('https://x.com/AlexAbian', '_blank')}>
+          <button className="header-btn" onClick={() => window.open('https://estructura.studio/', '_blank')}>
             <svg viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"><circle cx="6" cy="6" r="5"/><path d="M6 5v4M6 3.5v.5"/></svg>
             About
           </button>
@@ -428,6 +438,7 @@ export default function App() {
                 onClearGallery={() => set('gallery', [])}
                 onSave={handleSave}
                 onCopy={handleCopy}
+                onToast={toast}
               />
             )}
             {state.activePanel === 'palette' && <PalettePanel state={state} set={set} computedPalette={state.computedPalette} />}
@@ -461,6 +472,12 @@ export default function App() {
           {state.serpentine && ['floyd-steinberg','jarvis','stucki','atkinson','burkes','sierra','two-row-sierra','sierra-lite'].includes(state.ditherMethod) && (
             <span className="status-chip">serpentine</span>
           )}
+          {state.lastProcessMs !== null && (
+            <span className="status-chip status-chip--time" title="Last processing time">
+              <svg viewBox="0 0 10 10" fill="none" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"><circle cx="5" cy="5" r="4"/><path d="M5 3v2.2l1.4 1.4"/></svg>
+              {state.lastProcessMs}ms
+            </span>
+          )}
         </div>
         <div style={{ display:'flex', gap:6, alignItems:'center' }}>
           <button
@@ -482,6 +499,7 @@ export default function App() {
           </button>
         </div>
       </div>
+      <ToastContainer toasts={toasts} />
     </div>
   )
 }

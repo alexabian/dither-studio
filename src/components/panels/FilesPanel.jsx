@@ -1,6 +1,7 @@
 import { useRef, useState, useCallback } from 'react'
 import Slider from '../ui/Slider'
 import CropModal from '../CropModal'
+import CollapseChevron from '../ui/CollapseChevron'
 
 const FORMAT_OPTIONS = [
   { value: 'png',  label: 'PNG' },
@@ -8,10 +9,26 @@ const FORMAT_OPTIONS = [
   { value: 'webp', label: 'WebP' },
 ]
 
-export default function FilesPanel({ state, set, onFileLoad, onResetDefault, onCrop, gallery, onGallerySelect, onClearGallery, onSave, onCopy }) {
+// On mobile, collapse secondary sections by default to save vertical space
+const isMobileInit = () => typeof window !== 'undefined' && window.innerWidth <= 700
+
+export default function FilesPanel({ state, set, onFileLoad, onResetDefault, onCrop, gallery, onGallerySelect, onClearGallery, onSave, onCopy, onToast }) {
   const fileInputRef = useRef(null)
-  const [dragOver, setDragOver]   = useState(false)
-  const [showCrop, setShowCrop]   = useState(false)
+  const [dragOver, setDragOver] = useState(false)
+  const [showCrop, setShowCrop] = useState(false)
+
+  // Collapsible sections — mobile starts with secondary sections folded
+  const [open, setOpen] = useState(() => {
+    const mobile = isMobileInit()
+    return {
+      import:  true,
+      crop:    !mobile,
+      size:    !mobile,
+      export:  true,
+      gallery: !mobile,
+    }
+  })
+  const toggle = k => setOpen(o => ({ ...o, [k]: !o[k] }))
 
   const handleFile = useCallback((file) => {
     if (!file || !file.type.startsWith('image/')) return
@@ -43,8 +60,8 @@ export default function FilesPanel({ state, set, onFileLoad, onResetDefault, onC
             handleFile(new File([await item.getType(type)], 'clipboard.png', { type }))
             return
           }
-    } catch { alert('Could not read image from clipboard.') }
-  }, [handleFile])
+    } catch { onToast?.('Could not read image from clipboard.', 'error') }
+  }, [handleFile, onToast])
 
   const widthChange = (v) => {
     const w = Math.max(1, Math.round(v))
@@ -65,6 +82,7 @@ export default function FilesPanel({ state, set, onFileLoad, onResetDefault, onC
 
   return (
     <>
+      {/* ── Source ── always visible, no toggle needed */}
       <div className="panel-section">
         <span className="section-label">Source</span>
         <div className="source-tag">
@@ -75,117 +93,164 @@ export default function FilesPanel({ state, set, onFileLoad, onResetDefault, onC
         </div>
       </div>
 
+      {/* ── Import ── */}
       <div className="panel-section">
-        <span className="section-label">Import</span>
-        <div
-          className={`import-area${dragOver ? ' drag-over' : ''}`}
-          onDragOver={e => { e.preventDefault(); setDragOver(true) }}
-          onDragLeave={() => setDragOver(false)}
-          onDrop={handleDrop}
-          onClick={() => fileInputRef.current?.click()}
-        >
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M4 16.5v1.25A2.25 2.25 0 006.25 20h11.5A2.25 2.25 0 0020 17.75V16.5"/><path d="M12 4v12M8 8l4-4 4 4"/>
-          </svg>
-          <span>Drop image here</span>
-          <small>or click to browse · Ctrl+V to paste</small>
-          <input ref={fileInputRef} type="file" accept="image/*" style={{ display:'none' }} onChange={e => handleFile(e.target.files[0])} />
-        </div>
-        <div className="import-buttons">
-          <button className="action-btn" onClick={handlePaste}>
-            <svg viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.5"><rect x="3" y="1" width="7" height="9" rx="1"/><path d="M2 3H1v8h7v-1"/></svg>
-            Clipboard
-          </button>
-          <button className="action-btn" onClick={onResetDefault}>
-            <svg viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M2 6a4 4 0 104-4H4M4 2v4H1"/></svg>
-            Reset
-          </button>
-        </div>
+        <span className="section-label collapsible-label" onClick={() => toggle('import')}>
+          Import
+          <CollapseChevron open={open.import} />
+        </span>
+        {open.import && (
+          <>
+            <div
+              className={`import-area${dragOver ? ' drag-over' : ''}`}
+              onDragOver={e => { e.preventDefault(); setDragOver(true) }}
+              onDragLeave={() => setDragOver(false)}
+              onDrop={handleDrop}
+              onClick={() => fileInputRef.current?.click()}
+            >
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M4 16.5v1.25A2.25 2.25 0 006.25 20h11.5A2.25 2.25 0 0020 17.75V16.5"/><path d="M12 4v12M8 8l4-4 4 4"/>
+              </svg>
+              <span>Drop image here</span>
+              <small>or click to browse · Ctrl+V to paste</small>
+              <input ref={fileInputRef} type="file" accept="image/*" style={{ display:'none' }} onChange={e => handleFile(e.target.files[0])} />
+            </div>
+            <div className="import-buttons">
+              <button className="action-btn" onClick={handlePaste}>
+                <svg viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.5"><rect x="3" y="1" width="7" height="9" rx="1"/><path d="M2 3H1v8h7v-1"/></svg>
+                Clipboard
+              </button>
+              <button className="action-btn" onClick={onResetDefault}>
+                <svg viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M2 6a4 4 0 104-4H4M4 2v4H1"/></svg>
+                Reset
+              </button>
+            </div>
+          </>
+        )}
       </div>
 
+      {/* ── Crop ── only shown when image is loaded */}
       {state.originalPixels && (
         <div className="panel-section">
-          <span className="section-label">Crop</span>
-          <button
-            className="action-btn crop-open-btn"
-            onClick={() => setShowCrop(true)}
-            disabled={!state.originalPixels}
-          >
-            <svg viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
-              <path d="M3 1v10h10M1 3h2M1 7h2M1 11h2M5 13v-2M9 13v-2M13 13v-2"/>
-            </svg>
-            Open Crop Tool
-          </button>
-          <p style={{ fontSize:11, color:'var(--text-4)', marginTop:4, lineHeight:1.4 }}>
-            Drag to select · handles to resize · click outside to cancel
-          </p>
-        </div>
-      )}
-
-      {state.originalWidth && (
-        <div className="panel-section">
-          <span className="section-label">Size</span>
-          <Slider label="Width"  value={state.displayWidth}  min={1} max={maxW} step={1} onChange={widthChange} />
-          <Slider label="Height" value={state.displayHeight} min={1} max={maxH} step={1} onChange={heightChange} />
-          <div className="ratio-row">
-            <span className="ratio-label">{state.displayWidth} × {state.displayHeight}</span>
-            <div className="ratio-btns">
-              <button className={`ratio-btn${state.keepRatio ? ' active' : ''}`}  onClick={() => set('keepRatio', true)}>Lock</button>
-              <button className={`ratio-btn${!state.keepRatio ? ' active' : ''}`} onClick={() => set('keepRatio', false)}>Free</button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {state.originalWidth && (
-        <div className="panel-section">
-          <span className="section-label">Export</span>
-
-          {/* Format selector */}
-          <div style={{ display:'flex', gap:4, marginBottom:6 }}>
-            {FORMAT_OPTIONS.map(f => (
+          <span className="section-label collapsible-label" onClick={() => toggle('crop')}>
+            Crop
+            <CollapseChevron open={open.crop} />
+          </span>
+          {open.crop && (
+            <>
               <button
-                key={f.value}
-                className={`ratio-btn${state.exportFormat === f.value ? ' active' : ''}`}
-                onClick={() => set('exportFormat', f.value)}
-              >{f.label}</button>
-            ))}
-          </div>
-
-          {/* Quality slider for lossy formats */}
-          {state.exportFormat !== 'png' && (
-            <Slider label="Quality" value={state.exportQuality} min={0.1} max={1} step={0.05} defaultValue={0.92} onChange={v => set('exportQuality', v)} />
+                className="action-btn crop-open-btn"
+                onClick={() => setShowCrop(true)}
+              >
+                <svg viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
+                  <path d="M3 1v10h10M1 3h2M1 7h2M1 11h2M5 13v-2M9 13v-2M13 13v-2"/>
+                </svg>
+                Open Crop Tool
+              </button>
+              <p style={{ fontSize:11, color:'var(--text-4)', marginTop:4, lineHeight:1.4 }}>
+                Drag to select · handles to resize · click outside to cancel
+              </p>
+            </>
           )}
-
-          <div className="import-buttons" style={{ marginTop: 6 }}>
-            <button className="action-btn primary" onClick={onSave}>
-              <svg viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M2 8.5V10h8V8.5M6 2v6M4 6l2 2 2-2"/></svg>
-              Save {state.exportFormat?.toUpperCase() || 'PNG'}
-            </button>
-            <button className="action-btn" onClick={onCopy}>
-              <svg viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.5"><rect x="4" y="4" width="7" height="7" rx="1"/><path d="M1 8V2a1 1 0 011-1h6"/></svg>
-              Copy
-            </button>
-          </div>
         </div>
       )}
 
-      <div className="panel-section">
-        <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between' }}>
-          <span className="section-label">Gallery</span>
-          {gallery.length > 0 && <button className="clear-btn" onClick={onClearGallery}>Clear</button>}
-        </div>
-        {gallery.length > 0 ? (
-          <div className="gallery-grid">
-            {gallery.map((item, i) => (
-              <div key={i} className="gallery-thumb" onClick={() => onGallerySelect(item)} title={item.name}>
-                <img src={item.thumb} alt={item.name} />
-                <div className="gallery-thumb-label">{item.name.slice(0, 8)}</div>
+      {/* ── Size ── only shown when image is loaded */}
+      {state.originalWidth && (
+        <div className="panel-section">
+          <span className="section-label collapsible-label" onClick={() => toggle('size')}>
+            Size
+            {!open.size && (
+              <span className="section-label-hint">{state.displayWidth} × {state.displayHeight}</span>
+            )}
+            <CollapseChevron open={open.size} />
+          </span>
+          {open.size && (
+            <>
+              <Slider label="Width"  value={state.displayWidth}  min={1} max={maxW} step={1} onChange={widthChange} />
+              <Slider label="Height" value={state.displayHeight} min={1} max={maxH} step={1} onChange={heightChange} />
+              <div className="ratio-row">
+                <span className="ratio-label">{state.displayWidth} × {state.displayHeight}</span>
+                <div className="ratio-btns">
+                  <button className={`ratio-btn${state.keepRatio ? ' active' : ''}`}  onClick={() => set('keepRatio', true)}>Lock</button>
+                  <button className={`ratio-btn${!state.keepRatio ? ' active' : ''}`} onClick={() => set('keepRatio', false)}>Free</button>
+                </div>
               </div>
-            ))}
-          </div>
-        ) : (
-          <p style={{ fontSize:11, color:'var(--text-4)' }}>No saved images yet.</p>
+            </>
+          )}
+        </div>
+      )}
+
+      {/* ── Export ── only shown when image is loaded */}
+      {state.originalWidth && (
+        <div className="panel-section">
+          <span className="section-label collapsible-label" onClick={() => toggle('export')}>
+            Export
+            <CollapseChevron open={open.export} />
+          </span>
+          {open.export && (
+            <>
+              <div style={{ display:'flex', gap:4, marginBottom:6 }}>
+                {FORMAT_OPTIONS.map(f => (
+                  <button
+                    key={f.value}
+                    className={`ratio-btn${state.exportFormat === f.value ? ' active' : ''}`}
+                    onClick={() => set('exportFormat', f.value)}
+                  >{f.label}</button>
+                ))}
+              </div>
+              {state.exportFormat !== 'png' && (
+                <Slider label="Quality" value={state.exportQuality} min={0.1} max={1} step={0.05} defaultValue={0.92} onChange={v => set('exportQuality', v)} />
+              )}
+              <div className="import-buttons" style={{ marginTop: 6 }}>
+                <button className="action-btn primary" onClick={onSave}>
+                  <svg viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M2 8.5V10h8V8.5M6 2v6M4 6l2 2 2-2"/></svg>
+                  Save {state.exportFormat?.toUpperCase() || 'PNG'}
+                </button>
+                <button className="action-btn" onClick={onCopy}>
+                  <svg viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.5"><rect x="4" y="4" width="7" height="7" rx="1"/><path d="M1 8V2a1 1 0 011-1h6"/></svg>
+                  Copy
+                </button>
+              </div>
+            </>
+          )}
+        </div>
+      )}
+
+      {/* ── Gallery ── */}
+      <div className="panel-section">
+        <span className="section-label collapsible-label" onClick={() => toggle('gallery')}>
+          Gallery
+          {!open.gallery && gallery.length > 0 && (
+            <span className="section-label-hint">{gallery.length} saved</span>
+          )}
+          {open.gallery && gallery.length > 0 && (
+            <button
+              className="clear-btn"
+              onClick={e => { e.stopPropagation(); onClearGallery() }}
+              style={{ marginLeft: 'auto', marginRight: 4 }}
+            >Clear</button>
+          )}
+          <CollapseChevron open={open.gallery} />
+        </span>
+        {open.gallery && (
+          gallery.length > 0 ? (
+            <div className="gallery-grid">
+              {gallery.map((item, i) => (
+                <div key={i} className="gallery-thumb" onClick={() => onGallerySelect(item)} title={item.name}>
+                  <img src={item.thumb} alt={item.name} />
+                  <div className="gallery-thumb-label">{item.name.slice(0, 8)}</div>
+                  <button
+                    className="gallery-thumb-delete"
+                    onClick={e => { e.stopPropagation(); set('gallery', gallery.filter((_, j) => j !== i)) }}
+                    title="Remove from gallery"
+                  >✕</button>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p style={{ fontSize:11, color:'var(--text-4)' }}>No saved images yet.</p>
+          )
         )}
       </div>
 

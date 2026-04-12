@@ -19,9 +19,22 @@ export default function ImageCanvas({
     canvas.height = height
     const ctx = canvas.getContext('2d')
 
-    // "Hold to Compare" — show pre-dither adjusted image
+    // "Hold to Compare" — show pre-dither adjusted image with ORIGINAL badge
     if (comparing && originalPixels) {
       try { ctx.putImageData(new ImageData(new Uint8ClampedArray(originalPixels), width, height), 0, 0) } catch {}
+      // Draw "ORIGINAL" badge overlay
+      const label = 'ORIGINAL'
+      ctx.save()
+      ctx.font = `600 ${Math.max(9, Math.round(height * 0.025))}px Inter, system-ui, sans-serif`
+      const tw = ctx.measureText(label).width
+      const pad = 7, bh = Math.max(18, Math.round(height * 0.038))
+      const bw = tw + pad * 2
+      ctx.fillStyle = 'rgba(0,0,0,0.58)'
+      ctx.beginPath(); ctx.roundRect(8, 8, bw, bh, 3); ctx.fill()
+      ctx.fillStyle = 'rgba(255,255,255,0.92)'
+      ctx.textAlign = 'left'; ctx.textBaseline = 'middle'
+      ctx.fillText(label, 8 + pad, 8 + bh / 2)
+      ctx.restore()
       return
     }
 
@@ -121,6 +134,17 @@ export default function ImageCanvas({
 
   const resetView = useCallback(() => { setZoom(1); setPan({ x: 0, y: 0 }) }, [])
 
+  const fitToView = useCallback(() => {
+    if (!areaRef.current) return
+    const rect = areaRef.current.getBoundingClientRect()
+    const imgW = pixelSize > 1 ? (displayWidth || width) : width
+    const imgH = pixelSize > 1 ? (displayHeight || height) : height
+    if (!imgW || !imgH) return
+    const z = Math.min((rect.width  - 32) / imgW, (rect.height - 32) / imgH)
+    setZoom(Math.min(Math.max(0.15, z), 5))
+    setPan({ x: 0, y: 0 })
+  }, [width, height, displayWidth, displayHeight, pixelSize])
+
   const hasImage = pixels && width && height
 
   // Cursor: ew-resize near split line, grabbing while panning, grab otherwise
@@ -182,7 +206,8 @@ export default function ImageCanvas({
           <button className="zoom-btn" onClick={() => setZoom(z => Math.max(0.15, z / 1.25))} title="Zoom out">
             <svg viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.5"><circle cx="5" cy="5" r="4"/><path d="m10 10-2-2M3 5h4"/></svg>
           </button>
-          <button className="zoom-btn" onClick={resetView} title="Reset view (double-click canvas)">1:1</button>
+          <button className="zoom-btn zoom-btn--text" onClick={fitToView} title="Fit image to view">Fit</button>
+          <button className="zoom-btn zoom-btn--text" onClick={resetView} title="Reset to 100% (double-click canvas)">100%</button>
         </div>
       )}
 
