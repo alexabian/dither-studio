@@ -216,20 +216,17 @@ export default function App() {
     const fmt      = state.exportFormat || 'png'
     const mime     = fmt === 'jpeg' ? 'image/jpeg' : fmt === 'webp' ? 'image/webp' : 'image/png'
     const filename = `${state.sourceName || 'dither'}-${state.ditherMethod}.${fmt}`
-    // Use toBlob + createObjectURL — avoids browser navigating to a huge data URL
-    canvas.toBlob((blob) => {
-      const url = URL.createObjectURL(blob)
-      const a = document.createElement('a')
-      a.href = url
-      a.download = filename
-      document.body.appendChild(a)
-      a.click()
-      document.body.removeChild(a)
-      setTimeout(() => URL.revokeObjectURL(url), 100)
-      toast(`Saved as ${filename}`, 'success')
-      const thumb = makeThumb(state.processedPixels, pw, ph)
-      setMany({ gallery: [{ thumb, pixels: state.originalPixels.slice(), width: state.originalWidth, height: state.originalHeight, name: state.sourceName || 'image' }, ...state.gallery].slice(0, 9) })
-    }, mime, state.exportQuality || 0.92)
+    // Synchronous toDataURL + DOM-appended anchor — works in all browsers including
+    // Safari, which blocks a.click() downloads from async callbacks (toBlob context)
+    const a = document.createElement('a')
+    a.href = canvas.toDataURL(mime, state.exportQuality || 0.92)
+    a.download = filename
+    document.body.appendChild(a)
+    a.click()
+    document.body.removeChild(a)
+    toast(`Saved as ${filename}`, 'success')
+    const thumb = makeThumb(state.processedPixels, pw, ph)
+    setMany({ gallery: [{ thumb, pixels: state.originalPixels.slice(), width: state.originalWidth, height: state.originalHeight, name: state.sourceName || 'image' }, ...state.gallery].slice(0, 9) })
   }, [state, setMany, toast])
 
   const handleCopy = useCallback(async () => {
