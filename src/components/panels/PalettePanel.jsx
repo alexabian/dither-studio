@@ -96,7 +96,7 @@ export default function PalettePanel({ state, set, computedPalette }) {
     <>
       <div className="panel-section">
         <span className="section-label">Palette Size</span>
-        <Slider label="Colors" value={state.paletteColors} min={2} max={64} step={1} onChange={v => set('paletteColors', v)} />
+        <Slider label="Colors" value={state.paletteColors} min={2} max={64} step={1} defaultValue={8} onChange={v => set('paletteColors', v)} />
       </div>
 
       <div className="panel-section">

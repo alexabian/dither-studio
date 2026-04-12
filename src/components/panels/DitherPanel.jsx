@@ -53,9 +53,9 @@ export default function DitherPanel({ state, set, setMany }) {
       </div>
 
       <div className="panel-section">
-        <Slider label="Amount"    value={state.ditherAmount}    min={0} max={1}  step={0.01} onChange={v => set('ditherAmount', v)} />
-        <Slider label="Diffusion" value={state.ditherDiffusion} min={0} max={2}  step={0.01} onChange={v => set('ditherDiffusion', v)} />
-        <Slider label="Dot Size"  value={state.pixelSize}       min={1} max={16} step={1}    onChange={v => set('pixelSize', v)} />
+        <Slider label="Amount"    value={state.ditherAmount}    min={0} max={1}  step={0.01} defaultValue={0.65} onChange={v => set('ditherAmount', v)} />
+        <Slider label="Diffusion" value={state.ditherDiffusion} min={0} max={2}  step={0.01} defaultValue={1}    onChange={v => set('ditherDiffusion', v)} />
+        <Slider label="Dot Size"  value={state.pixelSize}       min={1} max={16} step={1}    defaultValue={1}    onChange={v => set('pixelSize', v)} />
 
         {ERROR_DIFFUSE_METHODS.has(state.ditherMethod) && (
           <div className="toggle-row" style={{ marginTop: 4 }}>

@@ -1,4 +1,4 @@
-export default function Slider({ label, value, min, max, step = 0.001, onChange }) {
+export default function Slider({ label, value, min, max, step = 0.001, onChange, defaultValue }) {
   const fmt = v => {
     if (step >= 1) return Math.round(v).toString()
     const decimals = step < 0.01 ? 3 : step < 0.1 ? 2 : 1
@@ -10,11 +10,23 @@ export default function Slider({ label, value, min, max, step = 0.001, onChange 
     onChange(parseFloat(next.toFixed(6)))
   }
 
+  const canReset = defaultValue !== undefined && value !== defaultValue
+  const handleReset = () => { if (defaultValue !== undefined) onChange(defaultValue) }
+
   return (
     <div className="slider-row">
       <div className="slider-header">
-        <span className="slider-label">{label}</span>
-        <span className="slider-value">{fmt(value)}</span>
+        <span
+          className={`slider-label${canReset ? ' slider-label--dirty' : ''}`}
+          onDoubleClick={handleReset}
+          title={defaultValue !== undefined ? `Double-click to reset (default: ${fmt(defaultValue)})` : undefined}
+        >{label}</span>
+        <span
+          className="slider-value"
+          onDoubleClick={handleReset}
+          title={defaultValue !== undefined ? `Double-click to reset` : undefined}
+          style={{ cursor: defaultValue !== undefined ? 'pointer' : undefined }}
+        >{fmt(value)}</span>
       </div>
       <div className="slider-controls">
         <button className="slider-nudge" onClick={() => nudge(-1)} title="Decrease">−</button>

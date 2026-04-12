@@ -154,7 +154,7 @@ export default function FilesPanel({ state, set, onFileLoad, onResetDefault, onC
 
           {/* Quality slider for lossy formats */}
           {state.exportFormat !== 'png' && (
-            <Slider label="Quality" value={state.exportQuality} min={0.1} max={1} step={0.05} onChange={v => set('exportQuality', v)} />
+            <Slider label="Quality" value={state.exportQuality} min={0.1} max={1} step={0.05} defaultValue={0.92} onChange={v => set('exportQuality', v)} />
           )}
 
           <div className="import-buttons" style={{ marginTop: 6 }}>

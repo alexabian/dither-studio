@@ -192,6 +192,19 @@ export default function CropModal({ pixels, width, height, sourceName, onConfirm
     dragRef.current = null
   }, [])
 
+  const applyRatio = (rw, rh) => {
+    if (!rw) { setCrop({ x:0, y:0, w:width, h:height }); return }
+    const target = rw / rh
+    const imgAspect = width / height
+    let cw, ch
+    if (imgAspect > target) { ch = height; cw = Math.round(height * target) }
+    else                    { cw = width;  ch = Math.round(width  / target) }
+    cw = Math.min(cw, width); ch = Math.min(ch, height)
+    const x = Math.round((width  - cw) / 2)
+    const y = Math.round((height - ch) / 2)
+    setCrop({ x, y, w: cw, h: ch })
+  }
+
   const handleConfirm = () => {
     const c = document.createElement('canvas')
     const { x, y, w, h } = crop
@@ -231,10 +244,27 @@ export default function CropModal({ pixels, width, height, sourceName, onConfirm
         </div>
 
         <div className="crop-modal-footer">
-          <button className="action-btn" onClick={() => setCrop({ x:0, y:0, w:width, h:height })}>
-            <svg viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M2 6a4 4 0 104-4H4M4 2v4H1"/></svg>
-            Reset
-          </button>
+          <div className="crop-ratio-btns">
+            {[
+              { label:'Free',  rw:null, rh:null },
+              { label:'1:1',   rw:1,  rh:1  },
+              { label:'4:3',   rw:4,  rh:3  },
+              { label:'3:2',   rw:3,  rh:2  },
+              { label:'16:9',  rw:16, rh:9  },
+              { label:'9:16',  rw:9,  rh:16 },
+            ].map(({ label, rw, rh }) => {
+              const active = rw
+                ? Math.abs(crop.w / crop.h - rw / rh) < 0.01
+                : crop.w === width && crop.h === height && crop.x === 0 && crop.y === 0
+              return (
+                <button
+                  key={label}
+                  className={`crop-ratio-btn${active ? ' active' : ''}`}
+                  onClick={() => applyRatio(rw, rh)}
+                >{label}</button>
+              )
+            })}
+          </div>
           <div style={{ marginLeft:'auto', display:'flex', gap:6 }}>
             <button className="action-btn" onClick={onClose}>Cancel</button>
             <button className="action-btn primary" onClick={handleConfirm}>

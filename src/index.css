@@ -386,6 +386,18 @@ input { font-family: inherit; }
   font-family: var(--font-mono);
   color: var(--status-text);
 }
+/* Palette swatches in status bar */
+.status-chip--swatches {
+  gap: 2px;
+  padding: 0 2px;
+}
+.status-swatch {
+  width: 8px; height: 8px;
+  border-radius: 2px;
+  border: 1px solid rgba(255,255,255,0.08);
+  flex-shrink: 0;
+}
+
 .status-chip-dot {
   width: 4px; height: 4px;
   border-radius: 50%;
@@ -429,12 +441,27 @@ input { font-family: inherit; }
   font-size: 11px;
   font-weight: 500;
   color: var(--text-2);
+  cursor: default;
+  user-select: none;
+}
+
+/* Subtle orange dot when slider differs from default */
+.slider-label--dirty::after {
+  content: '';
+  display: inline-block;
+  width: 4px; height: 4px;
+  border-radius: 50%;
+  background: var(--accent-2);
+  margin-left: 5px;
+  vertical-align: middle;
+  opacity: 0.7;
 }
 
 .slider-value {
   font-size: 11px;
   font-family: var(--font-mono);
   color: var(--text-3);
+  user-select: none;
   min-width: 36px;
   text-align: right;
 }
@@ -931,11 +958,28 @@ input[type=range]::-moz-range-thumb {
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 10px 14px;
+  padding: 8px 14px;
   border-top: 1px solid var(--border);
   background: var(--surface-2);
   flex-shrink: 0;
 }
+
+.crop-ratio-btns {
+  display: flex;
+  gap: 4px;
+}
+.crop-ratio-btn {
+  padding: 3px 8px;
+  border-radius: var(--r-sm);
+  border: 1px solid var(--border);
+  background: var(--surface-3);
+  font-size: 10.5px;
+  font-weight: 500;
+  color: var(--text-3);
+  transition: all 0.1s;
+}
+.crop-ratio-btn:hover { border-color: var(--border-strong); color: var(--text); background: var(--surface-2); }
+.crop-ratio-btn.active { background: var(--accent); border-color: var(--accent); color: #fff; }
 
 /* ── Presets Panel ─────────────────────────────────────────── */
 .preset-name-input {

@@ -442,9 +442,21 @@ export default function App() {
       <div className="status-bar">
         <div className="status-info">
           {state.displayWidth && state.displayHeight && (
-            <span className="status-chip"><span className="status-chip-dot" />{state.displayWidth} × {state.displayHeight}</span>
+            <span className="status-chip">
+              <span className="status-chip-dot" />
+              {state.pixelSize > 1 && state.processedWidth
+                ? `${state.processedWidth} × ${state.processedHeight} → ${state.displayWidth} × ${state.displayHeight}`
+                : `${state.displayWidth} × ${state.displayHeight}`
+              }
+            </span>
           )}
-          {colorCount > 0 && <span className="status-chip">{colorCount} colors</span>}
+          {colorCount > 0 && (
+            <span className="status-chip status-chip--swatches" title={`${colorCount} colors`}>
+              {state.computedPalette.slice(0, 24).map(([r,g,b], i) => (
+                <span key={i} className="status-swatch" style={{ background:`rgb(${r},${g},${b})` }} />
+              ))}
+            </span>
+          )}
           {state.ditherMethod !== 'disabled' && <span className="status-chip">{state.ditherMethod}</span>}
           {state.serpentine && ['floyd-steinberg','jarvis','stucki','atkinson','burkes','sierra','two-row-sierra','sierra-lite'].includes(state.ditherMethod) && (
             <span className="status-chip">serpentine</span>
