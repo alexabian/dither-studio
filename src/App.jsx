@@ -483,6 +483,7 @@ export default function App() {
           )}
         </div>
         <div style={{ display:'flex', gap:6, alignItems:'center' }}>
+          <span className="status-version">v{__APP_VERSION__}</span>
           <button
             className={`compare-btn${state.splitCompare ? ' active' : ''}`}
             onClick={() => set('splitCompare', !state.splitCompare)}
