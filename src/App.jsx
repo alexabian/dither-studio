@@ -210,24 +210,40 @@ export default function App() {
     const pw = state.processedWidth  || state.displayWidth
     const ph = state.processedHeight || state.displayHeight
     if (!pw || !ph) return
-    const canvas = document.createElement('canvas')
-    canvas.width = pw; canvas.height = ph
-    canvas.getContext('2d').putImageData(new ImageData(new Uint8ClampedArray(state.processedPixels), pw, ph), 0, 0)
-    const fmt      = state.exportFormat || 'png'
-    const mime     = fmt === 'jpeg' ? 'image/jpeg' : fmt === 'webp' ? 'image/webp' : 'image/png'
-    const rand = Math.floor(10000 + Math.random() * 90000)
-    const filename = `ditherstudio${rand}.${fmt}`
-    // Synchronous toDataURL + DOM-appended anchor — works in all browsers including
-    // Safari, which blocks a.click() downloads from async callbacks (toBlob context)
-    const a = document.createElement('a')
-    a.href = canvas.toDataURL(mime, state.exportQuality || 0.92)
-    a.download = filename
-    document.body.appendChild(a)
-    a.click()
-    document.body.removeChild(a)
-    toast(`Saved as ${filename}`, 'success')
-    const thumb = makeThumb(state.processedPixels, pw, ph)
-    setMany({ gallery: [{ thumb, pixels: state.originalPixels.slice(), width: state.originalWidth, height: state.originalHeight, name: state.sourceName || 'image' }, ...state.gallery].slice(0, 9) })
+    try {
+      const canvas = document.createElement('canvas')
+      canvas.width = pw; canvas.height = ph
+      canvas.getContext('2d').putImageData(new ImageData(new Uint8ClampedArray(state.processedPixels), pw, ph), 0, 0)
+      const fmt      = state.exportFormat || 'png'
+      const mime     = fmt === 'jpeg' ? 'image/jpeg' : fmt === 'webp' ? 'image/webp' : 'image/png'
+      const quality  = state.exportQuality || 0.92
+      const rand     = Math.floor(10000 + Math.random() * 90000)
+      const filename = `ditherstudio${rand}.${fmt}`
+
+      // Convert canvas → data URL → Blob → object URL, all synchronously.
+      // Keeps the call inside the user-gesture context (unlike async toBlob),
+      // and avoids Safari navigating to a data: URL instead of downloading.
+      const dataURL = canvas.toDataURL(mime, quality)
+      const binary  = atob(dataURL.split(',')[1])
+      const bytes   = new Uint8Array(binary.length)
+      for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i)
+      const blobURL = URL.createObjectURL(new Blob([bytes], { type: mime }))
+
+      const a = document.createElement('a')
+      a.href = blobURL
+      a.download = filename
+      document.body.appendChild(a)
+      a.click()
+      document.body.removeChild(a)
+      setTimeout(() => URL.revokeObjectURL(blobURL), 250)
+
+      toast(`Saved as ${filename}`, 'success')
+      const thumb = makeThumb(state.processedPixels, pw, ph)
+      setMany({ gallery: [{ thumb, pixels: state.originalPixels.slice(), width: state.originalWidth, height: state.originalHeight, name: state.sourceName || 'image' }, ...state.gallery].slice(0, 9) })
+    } catch (err) {
+      console.error('Save error:', err)
+      toast('Save failed — see console for details.', 'error')
+    }
   }, [state, setMany, toast])
 
   const handleCopy = useCallback(async () => {
