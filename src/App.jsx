@@ -52,8 +52,13 @@ function makeThumb(pixels, w, h) {
   return canvas.toDataURL('image/png')
 }
 
+function loadDarkMode() {
+  try { return localStorage.getItem('dither-dark') === '1' } catch { return false }
+}
+
 export default function App() {
   const [state, setState] = useState(DEFAULTS)
+  const [darkMode, setDarkMode] = useState(loadDarkMode)
   const workerRef   = useRef(null)
   const quickWorkerRef = useRef(null)
   const jobIdRef    = useRef(0)
@@ -333,11 +338,19 @@ export default function App() {
     return () => { window.removeEventListener('pointerdown', onDown); window.removeEventListener('pointerup', onUp) }
   }, [setMany])
 
+  const toggleDark = useCallback(() => {
+    setDarkMode(d => {
+      const next = !d
+      try { localStorage.setItem('dither-dark', next ? '1' : '0') } catch {}
+      return next
+    })
+  }, [])
+
   const panelTitle = { files:'Files', dither:'Dither', palette:'Palette', adjustments:'Adjustments', presets:'Presets' }[state.activePanel]
   const colorCount = state.computedPalette?.length ?? 0
 
   return (
-    <div className="app" onDragOver={e => e.preventDefault()} onDrop={handleGlobalDrop}>
+    <div className={`app${darkMode ? ' dark' : ''}`} onDragOver={e => e.preventDefault()} onDrop={handleGlobalDrop}>
       <header className="app-header">
         <div className="app-header-left">
           <div className="app-logo">
@@ -359,6 +372,18 @@ export default function App() {
             <span className="shortcut-hint">Ctrl+Z  undo</span>
             <span className="shortcut-hint">Ctrl+S  save</span>
           </div>
+          <button className="theme-toggle-btn" onClick={toggleDark} title={darkMode ? 'Switch to light mode' : 'Switch to dark mode'}>
+            {darkMode ? (
+              <svg viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round">
+                <circle cx="7" cy="7" r="2.8"/>
+                <path d="M7 1v1.2M7 11.8V13M1 7h1.2M11.8 7H13M2.75 2.75l.85.85M10.4 10.4l.85.85M2.75 11.25l.85-.85M10.4 3.6l.85-.85"/>
+              </svg>
+            ) : (
+              <svg viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round">
+                <path d="M11.5 8.5A5 5 0 0 1 5.5 2.5a5 5 0 1 0 6 6z"/>
+              </svg>
+            )}
+          </button>
           <button className="header-btn" onClick={() => window.open('https://x.com/AlexAbian', '_blank')}>
             <svg viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"><circle cx="6" cy="6" r="5"/><path d="M6 5v4M6 3.5v.5"/></svg>
             About
