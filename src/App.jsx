@@ -215,7 +215,8 @@ export default function App() {
     canvas.getContext('2d').putImageData(new ImageData(new Uint8ClampedArray(state.processedPixels), pw, ph), 0, 0)
     const fmt      = state.exportFormat || 'png'
     const mime     = fmt === 'jpeg' ? 'image/jpeg' : fmt === 'webp' ? 'image/webp' : 'image/png'
-    const filename = `${state.sourceName || 'dither'}-${state.ditherMethod}.${fmt}`
+    const rand = Math.floor(10000 + Math.random() * 90000)
+    const filename = `ditherstudio${rand}.${fmt}`
     // Synchronous toDataURL + DOM-appended anchor — works in all browsers including
     // Safari, which blocks a.click() downloads from async callbacks (toBlob context)
     const a = document.createElement('a')
