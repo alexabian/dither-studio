@@ -53,7 +53,10 @@ function makeThumb(pixels, w, h) {
 }
 
 function loadDarkMode() {
-  try { return localStorage.getItem('dither-dark') === '1' } catch { return false }
+  try {
+    const stored = localStorage.getItem('dither-dark')
+    return stored === null ? true : stored === '1' // default: dark
+  } catch { return true }
 }
 
 export default function App() {

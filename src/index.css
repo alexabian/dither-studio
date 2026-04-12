@@ -4,19 +4,19 @@
   --font: 'Inter', system-ui, -apple-system, sans-serif;
   --font-mono: 'JetBrains Mono', monospace;
 
-  /* Surfaces */
-  --bg: #ECEAE4;
-  --surface: #F7F6F2;
-  --surface-2: #EFEEE9;
-  --surface-3: #E8E6DF;
-  --border: #D9D6CE;
-  --border-strong: #C2BEB5;
+  /* Surfaces — light neutral gray */
+  --bg: #E8E8E8;
+  --surface: #F4F4F4;
+  --surface-2: #ECECEC;
+  --surface-3: #E2E2E2;
+  --border: #D0D0D0;
+  --border-strong: #B8B8B8;
 
   /* Text */
-  --text: #1A1916;
-  --text-2: #4A4740;
-  --text-3: #7A776F;
-  --text-4: #A8A59D;
+  --text: #1A1A1A;
+  --text-2: #444444;
+  --text-3: #787878;
+  --text-4: #A4A4A4;
 
   /* Accent - warm amber */
   --accent: #C2410C;
@@ -29,7 +29,7 @@
   --sidebar-border: #2E2B26;
   --sidebar-icon: #6B6760;
   --sidebar-icon-hover: #A8A59D;
-  --sidebar-icon-active: #F7F6F2;
+  --sidebar-icon-active: #F4F4F4;
 
   /* Canvas */
   --canvas-bg: #111110;
