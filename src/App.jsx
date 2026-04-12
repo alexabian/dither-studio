@@ -207,25 +207,30 @@ export default function App() {
   // ── Save / Copy ──────────────────────────────────────────────
   const handleSave = useCallback(() => {
     if (!state.processedPixels) return
-    // Use actual processed dimensions (may differ from displayWidth when pixelSize > 1)
     const pw = state.processedWidth  || state.displayWidth
     const ph = state.processedHeight || state.displayHeight
     if (!pw || !ph) return
     const canvas = document.createElement('canvas')
     canvas.width = pw; canvas.height = ph
-    const ctx = canvas.getContext('2d')
-    ctx.putImageData(new ImageData(new Uint8ClampedArray(state.processedPixels), pw, ph), 0, 0)
-    const fmt  = state.exportFormat || 'png'
-    const mime = fmt === 'jpeg' ? 'image/jpeg' : fmt === 'webp' ? 'image/webp' : 'image/png'
-    const a = document.createElement('a')
-    a.href = canvas.toDataURL(mime, state.exportQuality || 0.92)
-    a.download = `${state.sourceName || 'dither'}-${state.ditherMethod}.${fmt}`
-    a.click()
-    toast(`Saved as ${a.download}`, 'success')
-
-    const thumb = makeThumb(state.processedPixels, pw, ph)
-    setMany({ gallery: [{ thumb, pixels: state.originalPixels.slice(), width: state.originalWidth, height: state.originalHeight, name: state.sourceName || 'image' }, ...state.gallery].slice(0, 9) })
-  }, [state, setMany])
+    canvas.getContext('2d').putImageData(new ImageData(new Uint8ClampedArray(state.processedPixels), pw, ph), 0, 0)
+    const fmt      = state.exportFormat || 'png'
+    const mime     = fmt === 'jpeg' ? 'image/jpeg' : fmt === 'webp' ? 'image/webp' : 'image/png'
+    const filename = `${state.sourceName || 'dither'}-${state.ditherMethod}.${fmt}`
+    // Use toBlob + createObjectURL — avoids browser navigating to a huge data URL
+    canvas.toBlob((blob) => {
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = filename
+      document.body.appendChild(a)
+      a.click()
+      document.body.removeChild(a)
+      setTimeout(() => URL.revokeObjectURL(url), 100)
+      toast(`Saved as ${filename}`, 'success')
+      const thumb = makeThumb(state.processedPixels, pw, ph)
+      setMany({ gallery: [{ thumb, pixels: state.originalPixels.slice(), width: state.originalWidth, height: state.originalHeight, name: state.sourceName || 'image' }, ...state.gallery].slice(0, 9) })
+    }, mime, state.exportQuality || 0.92)
+  }, [state, setMany, toast])
 
   const handleCopy = useCallback(async () => {
     if (!state.processedPixels) return
