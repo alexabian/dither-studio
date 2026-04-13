@@ -1420,13 +1420,13 @@ input[type=range]::-moz-range-thumb {
   background: var(--surface-3, var(--surface));
   border: 1px solid var(--border);
   border-radius: calc(var(--r) - 2px);
-  color: var(--text-muted);
+  color: var(--text-3);
 }
 .faq-privacy-banner-icons svg { width: 14px; height: 14px; }
 .faq-privacy-banner-text {
   font-size: 12px;
   line-height: 1.6;
-  color: var(--text-muted);
+  color: var(--text-2);
 }
 .faq-privacy-banner-text strong {
   color: var(--text);
