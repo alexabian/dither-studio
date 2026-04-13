@@ -200,6 +200,33 @@ export default function FAQModal({ onClose }) {
         </div>
 
         <div className="faq-modal-body">
+          <div className="faq-privacy-banner">
+            <div className="faq-privacy-banner-icons">
+              <span title="Runs locally in your browser">
+                <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                  <rect x="2" y="3" width="12" height="9" rx="1.5"/>
+                  <path d="M5 15h6M8 12v3"/>
+                </svg>
+              </span>
+              <span title="No uploads, no server">
+                <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M8 10V4M5 7l3-3 3 3"/>
+                  <path d="M3 13h10"/>
+                  <path d="M13 3l-10 10" stroke="var(--accent-red,#e05)" strokeWidth="1.8"/>
+                </svg>
+              </span>
+              <span title="Your images stay on your device">
+                <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                  <rect x="4" y="7" width="8" height="7" rx="1"/>
+                  <path d="M6 7V5a2 2 0 0 1 4 0v2"/>
+                </svg>
+              </span>
+            </div>
+            <div className="faq-privacy-banner-text">
+              <strong>Everything runs in your browser.</strong> Dither Studio processes images entirely on your device using Web Workers. No image data is uploaded anywhere, no account is needed, and nothing is stored on a remote server. Your files never leave your computer.
+            </div>
+          </div>
+
           {FAQ.map(group => (
             <div key={group.group} className="faq-group">
               <div className="faq-group-label">{group.group}</div>
