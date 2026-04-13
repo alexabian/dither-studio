@@ -248,7 +248,7 @@ export default function App() {
         document.body.appendChild(a)
         a.click()
         document.body.removeChild(a)
-        setTimeout(() => URL.revokeObjectURL(blobURL), 1000)
+        setTimeout(() => URL.revokeObjectURL(blobURL), 30000)
       }
 
       toast(`Saved as ${filename}`, 'success')
@@ -281,7 +281,7 @@ export default function App() {
         toast(msg, 'error')
       }
     })
-  }, [state])
+  }, [state, toast])
 
   // ── Keyboard shortcuts ───────────────────────────────────────
   useEffect(() => {
@@ -342,6 +342,7 @@ export default function App() {
       URL.revokeObjectURL(url)
       handleFileLoad(ctx.getImageData(0, 0, c.width, c.height), c.width, c.height, file.name.replace(/\.[^.]+$/,''))
     }
+    img.onerror = () => URL.revokeObjectURL(url)
     img.src = url
   }, [handleFileLoad])
 
@@ -365,8 +366,9 @@ export default function App() {
                   URL.revokeObjectURL(url)
                   handleFileLoad(ctx.getImageData(0, 0, c.width, c.height), c.width, c.height, 'pasted')
                 }
+                img.onerror = () => URL.revokeObjectURL(url)
                 img.src = url
-              })
+              }).catch(() => {})
               return
             }
       }).catch(() => {})

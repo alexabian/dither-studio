@@ -123,6 +123,15 @@ export default function CropModal({ pixels, width, height, sourceName, onConfirm
 
   useEffect(() => { draw(crop) }, [draw, crop])
 
+  // Escape closes modal and cancels any in-progress drag
+  useEffect(() => {
+    const onKey = (e) => {
+      if (e.key === 'Escape') { dragRef.current = null; onClose() }
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [onClose])
+
   // Pointer down
   const onPtrDown = useCallback((e) => {
     const canvas = canvasRef.current

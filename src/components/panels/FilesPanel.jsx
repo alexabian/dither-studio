@@ -43,8 +43,12 @@ export default function FilesPanel({ state, set, onFileLoad, onResetDefault, onC
       URL.revokeObjectURL(url)
       onFileLoad(imageData, img.naturalWidth, img.naturalHeight, file.name.replace(/\.[^.]+$/, ''))
     }
+    img.onerror = () => {
+      URL.revokeObjectURL(url)
+      onToast?.('Could not load image file.', 'error')
+    }
     img.src = url
-  }, [onFileLoad])
+  }, [onFileLoad, onToast])
 
   const handleDrop = useCallback((e) => {
     e.preventDefault(); setDragOver(false)
