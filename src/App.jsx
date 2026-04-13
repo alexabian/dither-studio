@@ -222,33 +222,28 @@ export default function App() {
       const rand     = Math.floor(10000 + Math.random() * 90000)
       const filename = `ditherstudio${rand}.${fmt}`
 
-      // Build blob synchronously — keeps user-gesture context alive for the click below
-      const dataURL = canvas.toDataURL(mime, quality)
-      const binary  = atob(dataURL.split(',')[1])
-      const bytes   = new Uint8Array(binary.length)
-      for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i)
-      const blob    = new Blob([bytes], { type: mime })
-
-      // Trigger download. The anchor must be in the document for the `download`
-      // attribute to work — detached anchors fall back to navigation in Chrome/FF.
-      // Use dispatchEvent with bubbles:false so the click never reaches React's
-      // delegated event system.
-      const blobURL = URL.createObjectURL(blob)
+      // Use a data URL as the href — data URLs cannot navigate the page even if the
+      // download attribute is ignored, making this the safest cross-browser approach.
       const a = document.createElement('a')
-      a.href     = blobURL
+      a.href     = canvas.toDataURL(mime, quality)
       a.download = filename
-      a.style.display = 'none'
       document.body.appendChild(a)
-      a.dispatchEvent(new MouseEvent('click', { bubbles: false, cancelable: true, view: window }))
+      a.click()
       document.body.removeChild(a)
-      setTimeout(() => URL.revokeObjectURL(blobURL), 30000)
 
       toast(`Saved as ${filename}`, 'success')
-      const thumb = makeThumb(state.processedPixels, pw, ph)
-      setMany({ gallery: [{ thumb, pixels: state.originalPixels.slice(), width: state.originalWidth, height: state.originalHeight, name: state.sourceName || 'image' }, ...state.gallery].slice(0, 9) })
     } catch (err) {
       console.error('Save error:', err)
       toast('Save failed — see console for details.', 'error')
+    }
+    // Gallery update in a separate try so a thumbnail error never affects the save
+    try {
+      const pw2 = state.processedWidth  || state.displayWidth
+      const ph2 = state.processedHeight || state.displayHeight
+      const thumb = makeThumb(state.processedPixels, pw2, ph2)
+      setMany({ gallery: [{ thumb, pixels: state.originalPixels.slice(), width: state.originalWidth, height: state.originalHeight, name: state.sourceName || 'image' }, ...state.gallery].slice(0, 9) })
+    } catch (err) {
+      console.error('Gallery update error after save:', err)
     }
   }, [state, setMany, toast])
 
