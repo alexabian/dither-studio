@@ -219,6 +219,7 @@ input { font-family: inherit; }
   color: var(--sidebar-icon);
   transition: background 0.12s, color 0.12s;
   position: relative;
+  touch-action: manipulation; /* instant taps, no 300ms delay */
 }
 .sidebar-btn:hover { background: rgba(255,255,255,0.06); color: var(--sidebar-icon-hover); }
 .sidebar-btn.active { background: rgba(255,255,255,0.1); color: var(--sidebar-icon-active); }
@@ -277,6 +278,8 @@ input { font-family: inherit; }
   display: flex;
   flex-direction: column;
   gap: 18px;
+  touch-action: pan-y; /* allow vertical finger scrolling on mobile */
+  -webkit-overflow-scrolling: touch; /* smooth momentum scroll on iOS */
 }
 
 .panel-section {

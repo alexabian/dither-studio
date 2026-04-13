@@ -162,7 +162,7 @@ export default function ImageCanvas({
       {hasImage ? (
         <div
           className="canvas-viewport"
-          style={{ cursor: getCursor(), userSelect: 'none', width: '100%', height: '100%',
+          style={{ cursor: getCursor(), userSelect: 'none', touchAction: 'none', width: '100%', height: '100%',
                    display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', zIndex: 1 }}
           onPointerDown={handlePointerDown}
           onPointerMove={handlePointerMove}
