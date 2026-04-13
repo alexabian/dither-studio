@@ -6,7 +6,7 @@ const FAQ = [
     items: [
       {
         q: 'What is Dither Studio?',
-        a: 'Dither Studio is a free, browser-based image dithering tool. It converts photos and images into stylised pixel art using classic dithering algorithms — the same techniques used by retro computers, game consoles, and print media. Everything runs locally in your browser; no images are ever uploaded to a server.',
+        a: 'Dither Studio is a free, browser-based image dithering tool. It converts photos into stylised pixel art using classic dithering algorithms, the same techniques used by retro computers, game consoles, and print media. Everything runs in your browser; no images are ever uploaded to a server.',
       },
       {
         q: 'How do I load an image?',
@@ -27,7 +27,7 @@ const FAQ = [
       },
       {
         q: 'What is the difference between error-diffusion and ordered dithering?',
-        a: 'Error-diffusion methods (Floyd–Steinberg, Atkinson, etc.) spread quantisation error to neighbouring pixels, producing organic and irregular patterns that look natural on photos. Ordered/Bayer dithering uses a fixed geometric grid, giving a structured, halftone-like appearance. Random dithering adds pure noise — gritty and unpredictable.',
+        a: 'Error-diffusion methods (Floyd–Steinberg, Atkinson, etc.) spread quantisation error to neighbouring pixels, producing irregular patterns that look natural on photos. Ordered/Bayer dithering uses a fixed geometric grid, giving a structured, halftone-like appearance. Random dithering adds pure noise. Gritty and unpredictable.',
       },
       {
         q: 'What does Serpentine Scan do?',
@@ -35,11 +35,11 @@ const FAQ = [
       },
       {
         q: 'What is Dot Size?',
-        a: 'Dot Size (1–16) downscales the image before dithering, then stretches it back up with pixel-perfect rendering. Higher values produce large, chunky pixels — useful for achieving a lo-fi, low-resolution look similar to old handheld consoles.',
+        a: 'Dot Size (1–16) downscales the image before dithering, then stretches it back up with pixel-perfect rendering. Higher values produce large, chunky pixels, good for a lo-fi look similar to old handheld consoles.',
       },
       {
         q: 'What do Amount and Diffusion control?',
-        a: 'Amount scales the error that gets spread to neighbours — lower values produce subtler, smoother dithering. Diffusion controls how far the error travels; higher values can create more contrast and "pop" at the cost of a noisier result.',
+        a: 'Amount scales the error spread to neighbours. Lower values produce subtler, smoother dithering. Diffusion controls how far the error travels; higher values push more contrast at the cost of a noisier result.',
       },
     ],
   },
@@ -56,7 +56,7 @@ const FAQ = [
       },
       {
         q: 'What does Randomize Palette do?',
-        a: 'It picks one of the 30+ built-in palettes at random and applies it as your custom palette — great for quick exploration.',
+        a: 'It picks one of the 30+ built-in palettes at random and sets it as your custom palette. Good for trying different looks quickly.',
       },
     ],
   },
@@ -65,7 +65,7 @@ const FAQ = [
     items: [
       {
         q: 'What adjustments are applied before dithering?',
-        a: 'The Adjustments panel lets you tune Gamma, Blacks, Whites, Contrast, Saturation, and Hue. There is also a Noise generator (coverage, intensity, saturation) and a Blur/Sharpen pass with controllable edge strength and number of passes. All adjustments are non-destructive — they are applied to a copy of your original image.',
+        a: 'The Adjustments panel lets you tune Gamma, Blacks, Whites, Contrast, Saturation, and Hue. There is also a Noise generator (coverage, intensity, saturation) and a Blur/Sharpen pass with controllable edge strength and number of passes. All adjustments are non-destructive. They apply to a copy of your original image.',
       },
       {
         q: 'How do I reset a slider to its default?',
@@ -86,7 +86,7 @@ const FAQ = [
       },
       {
         q: 'What does resizing in the Size section do?',
-        a: 'The Width and Height sliders control the output resolution — the size of the dithered image that gets processed and exported. Use Lock to maintain the original aspect ratio, or Free to set arbitrary dimensions.',
+        a: 'The Width and Height sliders control the output resolution (the size of the dithered image that gets processed and exported). Use Lock to maintain the original aspect ratio, or Free to set arbitrary dimensions.',
       },
     ],
   },
@@ -112,11 +112,11 @@ const FAQ = [
     items: [
       {
         q: 'How do I compare the original and dithered versions?',
-        a: 'Two modes are available in the bottom bar. Split Compare adds a draggable divider — original on the left, dithered on the right. Hold to Compare shows the pre-dither adjusted image while held and snaps back on release. Press Space to toggle Split Compare.',
+        a: 'Two modes are available in the bottom bar. Split Compare adds a draggable divider: original on the left, dithered on the right. Hold to Compare shows the pre-dither adjusted image while held and snaps back on release. Press Space to toggle Split Compare.',
       },
       {
         q: 'What is the Live Preview thumbnail?',
-        a: 'While dragging a slider, a small thumbnail appears in the corner showing a quick low-resolution preview of the result. This lets you see the effect in real time without waiting for the full-resolution render to complete.',
+        a: 'While dragging a slider, a small thumbnail appears in the corner with a low-resolution preview. You can see the effect in real time without waiting for the full-resolution render.',
       },
     ],
   },
@@ -155,11 +155,11 @@ const FAQ = [
     items: [
       {
         q: 'How do presets work?',
-        a: 'Presets save your entire current configuration — dither method, palette, adjustments — under a name. The Presets panel includes 17 built-in starting points across four categories (Print & Press, Retro & Games, Photography & Film, Artistic). You can save your own and delete them individually.',
+        a: 'Presets save your current configuration (dither method, palette, adjustments) under a name. The Presets panel includes 17 built-in starting points across four categories (Print & Press, Retro & Games, Photography & Film, Artistic). You can save your own and delete them individually.',
       },
       {
         q: 'Does Dither Studio support undo/redo?',
-        a: 'Yes. Up to 60 steps of undo history are kept per session using Ctrl+Z / Ctrl+Y. History tracks all settings changes but not image loads — loading a new image starts a fresh history.',
+        a: 'Yes. Up to 60 steps of undo history are kept per session using Ctrl+Z / Ctrl+Y. History tracks settings changes but not image loads. Loading a new image starts a fresh history.',
       },
       {
         q: 'What is the Gallery?',
