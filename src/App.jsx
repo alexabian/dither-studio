@@ -7,6 +7,7 @@ import AdjustmentsPanel from './components/panels/AdjustmentsPanel'
 import PresetsPanel from './components/panels/PresetsPanel'
 import ImageCanvas from './components/ImageCanvas'
 import { useToast, ToastContainer } from './components/ui/Toast'
+import FAQModal from './components/FAQModal'
 import { generateDefaultImage } from './utils/generators'
 
 // Keys that affect processing output (used for undo/redo history)
@@ -64,6 +65,7 @@ function loadDarkMode() {
 export default function App() {
   const [state, setState] = useState(DEFAULTS)
   const [darkMode, setDarkMode] = useState(loadDarkMode)
+  const [showFAQ, setShowFAQ] = useState(false)
   const { toasts, toast } = useToast()
   const workerRef   = useRef(null)
   const quickWorkerRef = useRef(null)
@@ -429,8 +431,12 @@ export default function App() {
               </svg>
             )}
           </button>
+          <button className="header-btn" onClick={() => setShowFAQ(true)}>
+            <svg viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"><circle cx="6" cy="6" r="5"/><path d="M4.5 4.5a1.5 1.5 0 0 1 3 .4c0 1-1.5 1.4-1.5 2.3M6 10v.01"/></svg>
+            FAQ
+          </button>
           <button className="header-btn" onClick={() => window.open('https://estructura.studio/', '_blank')}>
-            <svg viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"><circle cx="6" cy="6" r="5"/><path d="M6 5v4M6 3.5v.5"/></svg>
+            <svg viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"><path d="M6 1a5 5 0 1 0 0 10A5 5 0 0 0 6 1zM1 6h10M6 1a7.5 7.5 0 0 1 2 5 7.5 7.5 0 0 1-2 5M6 1a7.5 7.5 0 0 0-2 5 7.5 7.5 0 0 0 2 5"/></svg>
             About
           </button>
         </div>
@@ -533,6 +539,7 @@ export default function App() {
         </div>
       </div>
       <ToastContainer toasts={toasts} />
+      {showFAQ && <FAQModal onClose={() => setShowFAQ(false)} />}
     </div>
   )
 }
