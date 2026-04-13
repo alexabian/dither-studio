@@ -100,6 +100,7 @@ export default function DitherPanel({ state, set, setMany }) {
               <path d="M2 7a5 5 0 1 0 1.5-3.5"/>
               <path d="M2 3.5V7h3.5"/>
             </svg>
+            Reset
           </button>
         </div>
       </div>
