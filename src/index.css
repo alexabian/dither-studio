@@ -653,6 +653,39 @@ input[type=range]::-moz-range-thumb {
   color: #fff;
 }
 
+/* Reset button — icon-only square that sits next to randomize buttons */
+.reset-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  flex-shrink: 0;
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  background: var(--surface-2);
+  border: 1.5px solid var(--border);
+  border-radius: var(--r);
+  color: var(--text-3);
+  transition: all 0.14s;
+}
+.reset-btn:hover {
+  background: var(--surface-3);
+  border-color: var(--border-strong);
+  color: var(--text-2);
+}
+.reset-btn:active { transform: scale(0.97); }
+.reset-btn svg { width: 12px; height: 12px; }
+/* Full-width variant for Adjustments panel */
+.reset-btn--full {
+  width: 100%;
+  height: auto;
+  padding: 6px 10px;
+  font-size: 11px;
+  font-weight: 500;
+  margin-top: 6px;
+}
+
 .source-tag {
   display: inline-flex;
   align-items: center;

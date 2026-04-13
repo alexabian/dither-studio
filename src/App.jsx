@@ -470,8 +470,8 @@ export default function App() {
                 onToast={toast}
               />
             )}
-            {state.activePanel === 'palette' && <PalettePanel state={state} set={set} computedPalette={state.computedPalette} />}
-            {state.activePanel === 'adjustments' && <AdjustmentsPanel state={state} set={set} histogram={state.histogram} />}
+            {state.activePanel === 'palette' && <PalettePanel state={state} set={set} setMany={setMany} computedPalette={state.computedPalette} />}
+            {state.activePanel === 'adjustments' && <AdjustmentsPanel state={state} set={set} setMany={setMany} histogram={state.histogram} />}
             {state.activePanel === 'presets' && <PresetsPanel state={state} setMany={setMany} />}
           </div>
         </aside>

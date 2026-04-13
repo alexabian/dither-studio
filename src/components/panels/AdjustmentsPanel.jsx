@@ -3,7 +3,13 @@ import Slider from '../ui/Slider'
 import Histogram from '../Histogram'
 import CollapseChevron from '../ui/CollapseChevron'
 
-export default function AdjustmentsPanel({ state, set, histogram }) {
+const ADJUSTMENTS_DEFAULTS = {
+  gamma: 2.13, blacks: 0.112, whites: 0, contrast: 1, saturation: 1, hue: 0,
+  noiseCoverage: 0, noiseIntensity: 0.2, noiseSaturation: 1,
+  blurStrength: 0, edgeStrength: 12, blurPasses: 2,
+}
+
+export default function AdjustmentsPanel({ state, set, setMany, histogram }) {
   const [open, setOpen] = useState({ color: true, noise: true, blur: true })
   const toggle = k => setOpen(o => ({ ...o, [k]: !o[k] }))
 
@@ -61,6 +67,13 @@ export default function AdjustmentsPanel({ state, set, histogram }) {
             <Slider label="Blur Strength" value={state.blurStrength} min={0} max={30} step={1} defaultValue={0}  onChange={v => set('blurStrength', v)} />
             <Slider label="Edge Strength" value={state.edgeStrength} min={0} max={30} step={1} defaultValue={12} onChange={v => set('edgeStrength', v)} />
             <Slider label="Passes"        value={state.blurPasses}   min={1} max={4}  step={1} defaultValue={2}  onChange={v => set('blurPasses', v)} />
+            <button className="reset-btn reset-btn--full" onClick={() => setMany(ADJUSTMENTS_DEFAULTS)} title="Reset all adjustments to defaults">
+              <svg viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M2 7a5 5 0 1 0 1.5-3.5"/>
+                <path d="M2 3.5V7h3.5"/>
+              </svg>
+              Reset all adjustments
+            </button>
           </>
         )}
       </div>

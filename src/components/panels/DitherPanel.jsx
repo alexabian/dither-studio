@@ -26,6 +26,10 @@ function rnd(min, max, decimals = 2) {
   return Math.round(v * 10 ** decimals) / 10 ** decimals
 }
 
+const DITHER_DEFAULTS = {
+  ditherMethod: 'atkinson', ditherAmount: 0.65, ditherDiffusion: 1, serpentine: true, pixelSize: 1,
+}
+
 export default function DitherPanel({ state, set, setMany }) {
   const randomizeSettings = () => {
     setMany({
@@ -44,6 +48,8 @@ export default function DitherPanel({ state, set, setMany }) {
       serpentine:      Math.random() > 0.5,
     })
   }
+
+  const resetDither = () => setMany(DITHER_DEFAULTS)
 
   return (
     <>
@@ -88,6 +94,12 @@ export default function DitherPanel({ state, set, setMany }) {
               <path d="M12 8.5l2 1.5-2 1.5"/>
             </svg>
             Randomize All
+          </button>
+          <button className="reset-btn" onClick={resetDither} title="Reset dither settings to defaults">
+            <svg viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M2 7a5 5 0 1 0 1.5-3.5"/>
+              <path d="M2 3.5V7h3.5"/>
+            </svg>
           </button>
         </div>
       </div>

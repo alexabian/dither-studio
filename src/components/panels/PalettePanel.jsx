@@ -68,7 +68,13 @@ const PALETTE_GROUPS = [
 // Flat list of all palettes for random picking
 const ALL_PALETTES = PALETTE_GROUPS.flatMap(g => g.palettes)
 
-export default function PalettePanel({ state, set, computedPalette }) {
+const PALETTE_DEFAULTS = {
+  paletteColors: 8,
+  paletteMethod: 'median-cut',
+  customColors:  ['#000000','#333333','#666666','#999999','#cccccc','#ffffff','#c084fc','#6d28d9'],
+}
+
+export default function PalettePanel({ state, set, setMany, computedPalette }) {
   const colorInputRefs = useRef([])
 
   const displayPalette = state.paletteMethod === 'custom'
@@ -105,15 +111,23 @@ export default function PalettePanel({ state, set, computedPalette }) {
       </div>
 
       <div className="panel-section">
-        <button className="randomize-btn randomize-btn--all" style={{ width:'100%' }} onClick={randomizePalette}>
-          <svg viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M1 4h2.5a4 4 0 0 1 3 1.4L8 7l1.5 1.6a4 4 0 0 0 3 1.4H14"/>
-            <path d="M12 2.5l2 1.5-2 1.5"/>
-            <path d="M1 10h2.5a4 4 0 0 0 3-1.4L8 7"/>
-            <path d="M12 8.5l2 1.5-2 1.5"/>
-          </svg>
-          Randomize Palette
-        </button>
+        <div className="randomize-row">
+          <button className="randomize-btn randomize-btn--all" style={{ flex: 1 }} onClick={randomizePalette}>
+            <svg viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M1 4h2.5a4 4 0 0 1 3 1.4L8 7l1.5 1.6a4 4 0 0 0 3 1.4H14"/>
+              <path d="M12 2.5l2 1.5-2 1.5"/>
+              <path d="M1 10h2.5a4 4 0 0 0 3-1.4L8 7"/>
+              <path d="M12 8.5l2 1.5-2 1.5"/>
+            </svg>
+            Randomize Palette
+          </button>
+          <button className="reset-btn" onClick={() => setMany(PALETTE_DEFAULTS)} title="Reset palette settings to defaults">
+            <svg viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M2 7a5 5 0 1 0 1.5-3.5"/>
+              <path d="M2 3.5V7h3.5"/>
+            </svg>
+          </button>
+        </div>
       </div>
 
       <div className="panel-section">
