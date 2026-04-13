@@ -320,8 +320,8 @@ export default function App() {
       if ((e.ctrlKey || e.metaKey) && (k === 'y' || (k === 'z' && e.shiftKey))) { e.preventDefault(); redo(); return }
       if ((e.ctrlKey || e.metaKey) && k === 's') { e.preventDefault(); handleSave(); return }
     }
-    window.addEventListener('keydown', onKeyDown)
-    return () => window.removeEventListener('keydown', onKeyDown)
+    window.addEventListener('keydown', onKeyDown, true)
+    return () => window.removeEventListener('keydown', onKeyDown, true)
   }, [state.splitCompare, set, undo, redo, handleSave])
 
   // ── Global drag-to-load ──────────────────────────────────────
