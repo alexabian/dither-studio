@@ -286,7 +286,10 @@ export default function App() {
   // ── Keyboard shortcuts ───────────────────────────────────────
   useEffect(() => {
     const onKeyDown = (e) => {
-      if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return
+      // Block shortcuts when typing in text fields, but allow them on range sliders
+      const isTextInput = e.target.tagName === 'TEXTAREA' ||
+        (e.target.tagName === 'INPUT' && e.target.type !== 'range')
+      if (isTextInput) return
       const k = e.key
 
       if (k === '1') { set('activePanel', 'files');        return }
@@ -414,7 +417,7 @@ export default function App() {
         </div>
         <div className="app-header-right">
           <div className="shortcut-hints">
-            <span className="shortcut-hint">[ / ]  method</span>
+            <span className="shortcut-hint">[ ]  dither method</span>
             <span className="shortcut-hint">Space  compare</span>
             <span className="shortcut-hint">Ctrl+Z  undo</span>
             <span className="shortcut-hint">Ctrl+S  save</span>
