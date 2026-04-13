@@ -229,13 +229,18 @@ export default function App() {
       for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i)
       const blob    = new Blob([bytes], { type: mime })
 
-      // Trigger download via a detached anchor — never appended to the DOM so it
-      // cannot fire React synthetic events or cause any page navigation.
+      // Trigger download. The anchor must be in the document for the `download`
+      // attribute to work — detached anchors fall back to navigation in Chrome/FF.
+      // Use dispatchEvent with bubbles:false so the click never reaches React's
+      // delegated event system.
       const blobURL = URL.createObjectURL(blob)
       const a = document.createElement('a')
       a.href     = blobURL
       a.download = filename
-      a.click()
+      a.style.display = 'none'
+      document.body.appendChild(a)
+      a.dispatchEvent(new MouseEvent('click', { bubbles: false, cancelable: true, view: window }))
+      document.body.removeChild(a)
       setTimeout(() => URL.revokeObjectURL(blobURL), 30000)
 
       toast(`Saved as ${filename}`, 'success')
