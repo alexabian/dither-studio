@@ -28,7 +28,7 @@ export function ToastContainer({ toasts }) {
           {t.type === 'info' && (
             <svg viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"><circle cx="6" cy="6" r="5"/><path d="M6 5v3.5M6 3.5v.01"/></svg>
           )}
-          <span>{message}</span>
+          <span>{t.message}</span>
         </div>
       ))}
     </div>
