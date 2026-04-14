@@ -26,7 +26,7 @@ const DITHER_METHODS = [
 ]
 
 const DEFAULTS = {
-  activePanel: 'dither',
+  activePanel: 'files',
   originalPixels: null, originalWidth: null, originalHeight: null, sourceName: null,
   displayWidth: 512, displayHeight: 512, keepRatio: true,
   processedPixels: null, processedWidth: null, processedHeight: null,
