@@ -227,14 +227,27 @@ export default function App() {
     const ph = state.processedHeight || state.displayHeight
     if (!pw || !ph) return
     try {
+      // Draw processed pixels onto an intermediate canvas
+      const src = document.createElement('canvas')
+      src.width = pw; src.height = ph
+      src.getContext('2d').putImageData(new ImageData(new Uint8ClampedArray(state.processedPixels), pw, ph), 0, 0)
+
+      // When pixelSize > 1 the worker downsampled the image; upscale back to
+      // displayWidth × displayHeight with pixelated rendering so the saved file
+      // matches exactly what is shown on screen.
+      const saveW = state.displayWidth  || pw
+      const saveH = state.displayHeight || ph
       const canvas = document.createElement('canvas')
-      canvas.width = pw; canvas.height = ph
-      canvas.getContext('2d').putImageData(new ImageData(new Uint8ClampedArray(state.processedPixels), pw, ph), 0, 0)
+      canvas.width = saveW; canvas.height = saveH
+      const ctx = canvas.getContext('2d')
+      ctx.imageSmoothingEnabled = false
+      ctx.drawImage(src, 0, 0, saveW, saveH)
+
       const fmt      = state.exportFormat || 'png'
       const mime     = fmt === 'jpeg' ? 'image/jpeg' : fmt === 'webp' ? 'image/webp' : 'image/png'
       const quality  = state.exportQuality || 0.92
       const rand     = Math.floor(10000 + Math.random() * 90000)
-      const filename = `ditherstudio${rand}.${fmt}`
+      const filename = `ditherama${rand}.${fmt}`
 
       // Use a data URL as the href — data URLs cannot navigate the page even if the
       // download attribute is ignored, making this the safest cross-browser approach.
@@ -266,10 +279,16 @@ export default function App() {
     const pw = state.processedWidth  || state.displayWidth
     const ph = state.processedHeight || state.displayHeight
     if (!pw || !ph) return
+    const src = document.createElement('canvas')
+    src.width = pw; src.height = ph
+    src.getContext('2d').putImageData(new ImageData(new Uint8ClampedArray(state.processedPixels), pw, ph), 0, 0)
+    const saveW = state.displayWidth  || pw
+    const saveH = state.displayHeight || ph
     const canvas = document.createElement('canvas')
-    canvas.width = pw; canvas.height = ph
+    canvas.width = saveW; canvas.height = saveH
     const ctx = canvas.getContext('2d')
-    ctx.putImageData(new ImageData(new Uint8ClampedArray(state.processedPixels), pw, ph), 0, 0)
+    ctx.imageSmoothingEnabled = false
+    ctx.drawImage(src, 0, 0, saveW, saveH)
     canvas.toBlob(async (blob) => {
       try {
         await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })])
