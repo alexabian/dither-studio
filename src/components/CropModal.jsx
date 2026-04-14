@@ -40,8 +40,9 @@ export default function CropModal({ pixels, width, height, sourceName, onConfirm
   const canvasRef   = useRef(null)
   const srcRef      = useRef(null)   // pre-rendered source image canvas
   const dragRef     = useRef(null)
-  const [crop, setCrop]     = useState({ x:0, y:0, w:width, h:height })
-  const [cursor, setCursor] = useState('crosshair')
+  const [crop, setCrop]         = useState({ x:0, y:0, w:width, h:height })
+  const [cursor, setCursor]     = useState('crosshair')
+  const [lockedRatio, setLockedRatio] = useState(null) // { rw, rh } or null
 
   // Compute scale to fit the image in the viewport
   const PAD   = 100
@@ -190,10 +191,45 @@ export default function CropModal({ pixels, width, height, sourceName, onConfirm
       h = Math.min(h, height - y)
     }
 
+    // Enforce locked ratio on handle drags
+    if (lockedRatio && lockedRatio.rw && type !== 'move' && type !== 'new') {
+      const r  = lockedRatio.rw / lockedRatio.rh
+      const ax = startCrop.x + startCrop.w   // right anchor
+      const ay = startCrop.y + startCrop.h   // bottom anchor
+      const mx = startCrop.x + startCrop.w / 2
+      const my = startCrop.y + startCrop.h / 2
+
+      let newW, newH
+      if (type === 'e' || type === 'w') {
+        newW = w; newH = Math.round(w / r)
+      } else if (type === 'n' || type === 's') {
+        newH = h; newW = Math.round(h * r)
+      } else {
+        // Corner: grow along the larger axis
+        newW = Math.max(w, Math.round(h * r))
+        newH = Math.round(newW / r)
+      }
+
+      // Reposition based on which corner is anchored
+      x = type.includes('w') ? ax - newW
+        : type.includes('e') ? startCrop.x
+        : Math.round(mx - newW / 2)
+      y = type.includes('n') ? ay - newH
+        : type.includes('s') ? startCrop.y
+        : Math.round(my - newH / 2)
+      w = newW; h = newH
+
+      // Re-clamp after ratio adjustment
+      x = clamp(x, 0, width  - MIN)
+      y = clamp(y, 0, height - MIN)
+      w = clamp(w, MIN, width  - x)
+      h = clamp(h, MIN, height - y)
+    }
+
     const next = { x:Math.round(x), y:Math.round(y), w:Math.round(w), h:Math.round(h) }
     dragRef.current.live = next
     draw(next)
-  }, [crop, scale, width, height, draw])
+  }, [crop, scale, width, height, draw, lockedRatio])
 
   const onPtrUp = useCallback(() => {
     if (!dragRef.current) return
@@ -202,7 +238,12 @@ export default function CropModal({ pixels, width, height, sourceName, onConfirm
   }, [])
 
   const applyRatio = (rw, rh) => {
-    if (!rw) { setCrop({ x:0, y:0, w:width, h:height }); return }
+    if (!rw) {
+      setLockedRatio(null)
+      setCrop({ x:0, y:0, w:width, h:height })
+      return
+    }
+    setLockedRatio({ rw, rh })
     const target = rw / rh
     const imgAspect = width / height
     let cw, ch

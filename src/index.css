@@ -142,12 +142,11 @@ input { font-family: inherit; }
 .app-logo {
   width: 26px; height: 26px;
   border-radius: var(--r-sm);
-  background: var(--text);
-  display: flex; align-items: center; justify-content: center;
+  overflow: hidden;
   flex-shrink: 0;
 }
 
-.app-logo svg { width: 14px; height: 14px; }
+.app-logo img { width: 26px; height: 26px; display: block; object-fit: cover; }
 
 .app-title {
   font-size: 13px;
@@ -1426,8 +1425,8 @@ input[type=range]::-moz-range-thumb {
 
 .faq-privacy-banner {
   display: flex;
-  gap: 14px;
-  align-items: flex-start;
+  flex-direction: column;
+  gap: 10px;
   background: var(--surface-2);
   border: 1px solid var(--border);
   border-radius: var(--r);
@@ -1435,10 +1434,8 @@ input[type=range]::-moz-range-thumb {
 }
 .faq-privacy-banner-icons {
   display: flex;
-  flex-direction: column;
-  gap: 8px;
-  flex-shrink: 0;
-  padding-top: 1px;
+  flex-direction: row;
+  gap: 6px;
 }
 .faq-privacy-banner-icons span {
   display: flex;

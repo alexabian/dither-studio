@@ -406,14 +406,7 @@ export default function App() {
       <header className="app-header">
         <div className="app-header-left" onClick={() => set('activePanel', 'files')} style={{ cursor: 'pointer' }}>
           <div className="app-logo">
-            <svg viewBox="0 0 14 14" fill="none">
-              <rect x="1" y="1" width="4" height="4" rx="0.5" fill="white" opacity="0.9"/>
-              <rect x="6" y="1" width="4" height="4" rx="0.5" fill="white" opacity="0.55"/>
-              <rect x="9" y="4" width="4" height="4" rx="0.5" fill="white" opacity="0.3"/>
-              <rect x="1" y="6" width="4" height="4" rx="0.5" fill="white" opacity="0.55"/>
-              <rect x="6" y="6" width="4" height="4" rx="0.5" fill="white" opacity="0.75"/>
-              <rect x="3" y="9" width="4" height="4" rx="0.5" fill="white" opacity="0.4"/>
-            </svg>
+            <img src="/icon.png" alt="Dither Studio" />
           </div>
           <span className="app-title">Dither Studio</span>
         </div>
