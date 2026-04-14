@@ -82,6 +82,11 @@ export default function ImageCanvas({
     }
   }, [pixels, originalPixels, splitCompare, comparing, splitX, width, height])
 
+  // ── Reset to 100% whenever a new image is loaded ────────────
+  useEffect(() => {
+    if (width && height) { setZoom(1); setPan({ x: 0, y: 0 }) }
+  }, [width, height])
+
   // ── Wheel zoom ──────────────────────────────────────────────
   const handleWheel = useCallback((e) => {
     e.preventDefault()
