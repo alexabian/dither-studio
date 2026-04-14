@@ -180,10 +180,24 @@ export default function App() {
 
   // ── Load default image on mount ──────────────────────────────
   useEffect(() => {
-    const imgData = generateDefaultImage(512, 512)
-    const pixels  = new Uint8ClampedArray(imgData.data)
-    setMany({ originalPixels: pixels, originalWidth: 512, originalHeight: 512,
-              displayWidth: 512, displayHeight: 512, sourceName: 'default' })
+    const img = new Image()
+    img.onload = () => {
+      const c = document.createElement('canvas')
+      c.width = img.naturalWidth; c.height = img.naturalHeight
+      c.getContext('2d').drawImage(img, 0, 0)
+      const imageData = c.getContext('2d').getImageData(0, 0, c.width, c.height)
+      setMany({ originalPixels: new Uint8ClampedArray(imageData.data),
+                originalWidth: c.width, originalHeight: c.height,
+                displayWidth: c.width, displayHeight: c.height, sourceName: 'oinarisan' })
+    }
+    img.onerror = () => {
+      // Fall back to generated gradient if image fails to load
+      const imgData = generateDefaultImage(512, 512)
+      setMany({ originalPixels: new Uint8ClampedArray(imgData.data),
+                originalWidth: 512, originalHeight: 512,
+                displayWidth: 512, displayHeight: 512, sourceName: 'default' })
+    }
+    img.src = '/oinarisan.png'
   }, [])
 
   // ── File load ────────────────────────────────────────────────
