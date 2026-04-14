@@ -406,9 +406,9 @@ export default function App() {
       <header className="app-header">
         <div className="app-header-left" onClick={() => set('activePanel', 'files')} style={{ cursor: 'pointer' }}>
           <div className="app-logo">
-            <img src="/icon.png" alt="Dither Studio" />
+            <img src="/icon.png" alt="ditherama" />
           </div>
-          <span className="app-title">Dither Studio</span>
+          <span className="app-title">ditherama</span>
         </div>
         <div className="app-header-right">
           <div className="shortcut-hints">

@@ -5,8 +5,8 @@ const FAQ = [
     group: 'Getting Started',
     items: [
       {
-        q: 'What is Dither Studio?',
-        a: 'Dither Studio is a free, browser-based image dithering tool. It converts photos into stylised pixel art using classic dithering algorithms, the same techniques used by retro computers, game consoles, and print media. Everything runs in your browser; no images are ever uploaded to a server.',
+        q: 'What is ditherama?',
+        a: 'ditherama is a free, browser-based image dithering tool. It converts photos into stylised pixel art using classic dithering algorithms, the same techniques used by retro computers, game consoles, and print media. Everything runs in your browser; no images are ever uploaded to a server.',
       },
       {
         q: 'How do I load an image?',
@@ -23,7 +23,7 @@ const FAQ = [
     items: [
       {
         q: 'What dithering methods are available?',
-        a: 'Dither Studio includes 11 algorithms: Floyd–Steinberg, Jarvis–Judice–Ninke, Stucki, Atkinson, Burkes, Sierra, Sierra 2-Row, Sierra Lite (all error-diffusion), Ordered/Bayer (pattern-based), Random, and None (straight quantisation without dithering).',
+        a: 'ditherama includes 11 algorithms: Floyd–Steinberg, Jarvis–Judice–Ninke, Stucki, Atkinson, Burkes, Sierra, Sierra 2-Row, Sierra Lite (all error-diffusion), Ordered/Bayer (pattern-based), Random, and None (straight quantisation without dithering).',
       },
       {
         q: 'What is the difference between error-diffusion and ordered dithering?',
@@ -48,7 +48,7 @@ const FAQ = [
     items: [
       {
         q: 'How does colour quantisation work?',
-        a: 'Dither Studio reduces your image to a limited palette before dithering. Three automatic methods are available: Median Cut (fast, good general purpose), Octree (great for images with many distinct colours), and K-Means (slower but often produces the most perceptually accurate palettes).',
+        a: 'ditherama reduces your image to a limited palette before dithering. Three automatic methods are available: Median Cut (fast, good general purpose), Octree (great for images with many distinct colours), and K-Means (slower but often produces the most perceptually accurate palettes).',
       },
       {
         q: 'Can I use my own colours?',
@@ -158,7 +158,7 @@ const FAQ = [
         a: 'Presets save your current configuration (dither method, palette, adjustments) under a name. The Presets panel includes 17 built-in starting points across four categories (Print & Press, Retro & Games, Photography & Film, Artistic). You can save your own and delete them individually.',
       },
       {
-        q: 'Does Dither Studio support undo/redo?',
+        q: 'Does ditherama support undo/redo?',
         a: 'Yes. Up to 60 steps of undo history are kept per session using Ctrl+Z / Ctrl+Y. History tracks settings changes but not image loads. Loading a new image starts a fresh history.',
       },
       {
@@ -193,7 +193,7 @@ export default function FAQModal({ onClose }) {
             </svg>
             FAQ
           </span>
-          <span className="faq-modal-sub">Frequently asked questions about Dither Studio</span>
+          <span className="faq-modal-sub">Frequently asked questions about ditherama</span>
           <button className="crop-close-btn" onClick={onClose} title="Close (Esc)">
             <svg viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M2 2l8 8M10 2l-8 8"/></svg>
           </button>
@@ -223,7 +223,7 @@ export default function FAQModal({ onClose }) {
               </span>
             </div>
             <div className="faq-privacy-banner-text">
-              <strong>Everything runs in your browser.</strong> Dither Studio processes images entirely on your device using Web Workers. No image data is uploaded anywhere, no account is needed, and nothing is stored on a remote server. Your files never leave your computer.
+              <strong>Everything runs in your browser.</strong> ditherama processes images entirely on your device using Web Workers. No image data is uploaded anywhere, no account is needed, and nothing is stored on a remote server. Your files never leave your computer.
             </div>
           </div>
 
