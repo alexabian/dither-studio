@@ -139,6 +139,28 @@ input { font-family: inherit; }
   gap: 8px;
 }
 
+.app-header-home-btn {
+  appearance: none;
+  background: transparent;
+  border: 0;
+  padding: 4px 6px;
+  margin: -4px -6px;
+  border-radius: var(--r);
+  color: inherit;
+  cursor: pointer;
+  transition: background 0.12s, color 0.12s, box-shadow 0.12s;
+}
+
+.app-header-home-btn:hover {
+  background: var(--surface-2);
+}
+
+.app-header-home-btn:focus-visible {
+  outline: none;
+  background: var(--surface-2);
+  box-shadow: 0 0 0 2px var(--accent-2);
+}
+
 .app-logo {
   width: 26px; height: 26px;
   border-radius: var(--r-sm);

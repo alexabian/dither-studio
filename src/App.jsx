@@ -423,12 +423,18 @@ export default function App() {
   return (
     <div className={`app${darkMode ? ' dark' : ''}`} onDragOver={e => e.preventDefault()} onDrop={handleGlobalDrop}>
       <header className="app-header">
-        <div className="app-header-left" onClick={() => set('activePanel', 'files')} style={{ cursor: 'pointer' }}>
+        <button
+          type="button"
+          className="app-header-left app-header-home-btn"
+          onClick={() => set('activePanel', 'files')}
+          title="Return to Files panel"
+          aria-label="Return to Files panel"
+        >
           <div className="app-logo">
             <img src="/icon.png" alt="ditherama" />
           </div>
           <span className="app-title">ditherama</span>
-        </div>
+        </button>
         <div className="app-header-right">
           <div className="shortcut-hints">
             <span className="shortcut-hint">[ ]  dither method</span>
